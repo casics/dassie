@@ -16,6 +16,18 @@ try:
 except:
     pass
 
+# Global constants.
+# .............................................................................
+
+_CONN_TIMEOUT = 5000
+'''Time to wait for connection to database, in ms.'''
+
+_DEFAULT_PORT = 27017
+'''Default network port for MongoDB if no explicit port number is given.'''
+
+_DB_NAME = 'lcsh-db'
+'''The name of our LoCTerms database in MongoDB.'''
+
 # Main body.
 # .............................................................................
 
@@ -64,16 +76,17 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         msg('Nothing appears to be listening at port {}'.format(port),
             'error', colorize)
         return
+    if not port:
+        port = _DEFAULT_PORT
 
-    # Connect to the LCSH database
+    # Connect to the LCSH database.
     url = 'mongodb://' + user + ':' + password + '@' + host
     if port:
-        url = url + ':' + port
-    url = url + '/lcsh-db?authSource=admin'
+        url = url + ':' + str(port)
+    url = url + '/' + _DB_NAME + '?authSource=admin'
 
-    db      = MongoClient(url, tz_aware=True,
-                          connectTimeoutMS=5000, serverSelectionTimeoutMS=5000)
-    lcsh_db = db['lcsh-db']
+    db = MongoClient(url, tz_aware=True, serverSelectionTimeoutMS=_CONN_TIMEOUT)
+    lcsh_db = db[_DB_NAME]
     lcsh    = lcsh_db.terms
 
     # Do the work.
