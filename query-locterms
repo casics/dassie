@@ -1,8 +1,32 @@
 #!/usr/bin/env python3
-#
-# @file    cataloguer.py
-# @brief   Creates a database of all projects in repository hosts
-# @author  Michael Hucka
+'''
+query-locterms: interactively print information about an LCSH term
+
+Usage:
+    query-locterms -u USER -p PASSWORD -d IDENTIFIER [IDENTIFIER ...]
+or
+    query-locterms -u USER -p PASSWORD -t IDENTIFIER [IDENTIFIER ...]
+
+This program will connect to the LoCTerms database using the user login name
+and password provided as arguments (-u and -p, respectively). Additional
+arguments can be used to specify the host (-H) and port (-P) on which the
+database process is listening.  The default for the host is "localhost" and
+the default port is whatever is configured in your instance of MongoDB.
+
+The following actions are understood; note that only one can be indicated
+at a time:
+
+  -d    Describe the term(s) given on the command line
+  -t    Trace the path from the given term(s) to root terms
+
+The remaining arguments on the command line are assumed to be identifiers of
+terms in the Library of Congress Subject Headings (LCSH).
+'''
+
+__version__ = '1.0.0'
+__author__  = 'Michael Hucka <mhucka@caltech.edu>'
+__email__   = 'mhucka@caltech.edu'
+__license__ = 'GPLv3'
 
 import sys
 import operator
@@ -16,11 +40,12 @@ try:
 except:
     pass
 
+
 # Global constants.
 # .............................................................................
 
 _CONN_TIMEOUT = 5000
-'''Time to wait for connection to database, in ms.'''
+'''Time to wait for connection to database, in milliseconds.'''
 
 _DEFAULT_PORT = 27017
 '''Default network port for MongoDB if no explicit port number is given.'''
@@ -28,6 +53,7 @@ _DEFAULT_PORT = 27017
 _DB_NAME = 'lcsh-db'
 '''The name of our LoCTerms database in MongoDB.'''
 
+
 # Main body.
 # .............................................................................
 
@@ -56,7 +82,7 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     # Dealing with a negated variable is confusing, so turn it around here.
     colorize = 'termcolor' in sys.modules and not nocolor
 
-    # Check arguments are provided.
+    # Check arguments.
     if not trace and not describe:
         raise SystemExit(colorized('No action specified. Use -h for help.', 'error'))
     if trace and describe:
@@ -65,6 +91,8 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         raise SystemExit(colorized('Must provide a database user login and password.', 'error'))
     if not terms:
         raise SystemExit(colorized('No LCSH terms given. Use -h for help.', 'error'))
+    if not port:
+        port = _DEFAULT_PORT
 
     # Do some simple sanity checks:
     for t in terms:
@@ -72,8 +100,6 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
             msg('Identifiers must be LCSH identifiers, like sh960086680',
                 'error', colorize)
             return
-    if not port:
-        port = _DEFAULT_PORT
     if not port_occupied(host, int(port)):
         msg('Cannot connect to port {} -- is the database running?'.format(port),
             'error', colorize)
@@ -86,17 +112,19 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     lcsh = db[_DB_NAME].terms
 
     # Do the work.
-    msg('='*70, colorize)
+    msg(colorized('='*70, 'dark', colorize))
     if trace:
         for t in terms:
             trace_term(lcsh, t, colorize)
     if describe:
         for t in terms:
             explain_term(lcsh, t, colorize)
-    msg('='*70, colorize)
+            msg('')
+    msg(colorized('='*70, 'dark', colorize))
 
 
 def trace_term(lcsh, term, colorize):
+    '''Trace a term's "broader" links until we can't go any further.'''
     entry = lcsh.find_one({'_id': term})
     if not entry:
         msg('Could not find {} in the database'.format(term), 'error', colorize)
@@ -105,6 +133,7 @@ def trace_term(lcsh, term, colorize):
 
 
 def explain_term(lcsh, term, colorize):
+    '''Print a description of one term.'''
     entry = lcsh.find_one({'_id': term})
     if not entry:
         msg('Could not find {} in the database'.format(term), 'error', colorize)
@@ -113,6 +142,7 @@ def explain_term(lcsh, term, colorize):
 
 
 def get_paths(lcsh, entry):
+    '''Recursively follow "broader" term links, and return a list of results.'''
     paths = []
     if not entry['broader']:
         paths = [[entry]]
@@ -120,7 +150,8 @@ def get_paths(lcsh, entry):
         for broader in entry['broader']:
             parent = lcsh.find_one({'_id': broader})
             if not parent:
-                raise SystemExit('Broader term {} not found.'.format(broader))
+                raise SystemExit(colorized('Broader term {} not found.'.format(broader),
+                                           'error', colorize))
             if parent['broader']:
                 for path in get_paths(lcsh, parent):
                     paths.append([entry] + path)
@@ -130,6 +161,7 @@ def get_paths(lcsh, entry):
 
 
 def print_paths(paths, colorize):
+    '''Print a summary of the terms in the given list of paths.'''
     # Paths assumed to be a list of lists of the form:
     # [ [leaf_term, parent_term, parent_parent_term, ...],
     #   [leaf_term, parent_term, parent_parent_term, ...],
@@ -146,71 +178,64 @@ def print_paths(paths, colorize):
 
 
 def print_one(term, indent='', colorize=False):
+    '''Print one term, as an identifier plus its label.'''
     label = term['label'] if term['label'] else '(no label)'
     msg('{}{}: {}'.format(indent, colorized(term['_id'], 'bold', colorize), label))
 
 
 def print_details(entry, colorize=False):
+    '''Print details about a single term.'''
     label = entry['label'] if entry['label'] else '(no label)'
-    msg(entry['_id'] + ':')
-    msg('         URL: http://id.loc.gov/authorities/subjects/'
-        + entry['_id'] + '.html')
-    msg('       label: ' + label)
+    msg(colorized(entry['_id'], 'bold', colorize) + ':')
+    msg(colorized('         URL: ', 'dark', colorize) +
+        'http://id.loc.gov/authorities/subjects/' + entry['_id'] + '.html')
+    msg(colorized('       label: ', 'dark', colorize) + label)
     if entry['alt_labels']:
-        msg('  alt labels: ' + '\n              '.join(entry['alt_labels']))
+        msg(colorized('  alt labels: ', 'dark', colorize)
+            + '\n              '.join(entry['alt_labels']))
     else:
-        msg('  alt labels: (none)')
+        msg(colorized('  alt labels: (none)', 'dark', colorize))
     if entry['narrower']:
-        msg('    narrower: ' + ', '.join(entry['narrower']))
+        msg(colorized('    narrower: ', 'dark', colorize) + ', '.join(entry['narrower']))
     else:
-        msg('    narrower: ' + ', '.join(entry['narrower']))
+        msg(colorized('    narrower: (none)', 'dark', colorize))
     if entry['broader']:
-        msg('     broader: ' + ', '.join(entry['broader']))
+        msg(colorized('     broader: ', 'dark', colorize) + ', '.join(entry['broader']))
     else:
-        msg('     broader: (none)')
+        msg(colorized('     broader: (none)', 'dark', colorize))
     if entry['topmost']:
-        msg('     topmost: ' + ', '.join(entry['topmost']))
+        msg(colorized('     topmost: ', 'dark', colorize) + ', '.join(entry['topmost']))
     else:
-        msg('     topmost: (none)')
+        msg(colorized('     topmost: (none)', 'dark', colorize))
     if entry['note']:
-        prefix = '        note: '
+        prefix = colorized('        note: ', 'dark', colorize)
         indent = len(prefix)
         text = pprint.pformat(entry['note'], width=77-indent)
         text = text[1:-1]
         msg(prefix + text)
     else:
-        msg('        note: (none)')
+        msg(colorized('        note: (none)', 'dark', colorize))
 
-
-def port_occupied(host, port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.bind((host, port))
-    except socket.error as e:
-        # True if occupied, false if not
-        # This has value 48 on macOS but apparently 98 on others.
-        return (e.errno in [48, 98])
-    finally:
-        sock.close()
-
-
+
 # Utilities for printing messages.
 # .............................................................................
 
-def msg(text, flag=None, colorize=True):
+def msg(text, flags=None, colorize=True):
     if colorize:
-        print(colorized(text, flag), flush=True)
+        print(colorized(text, flags), flush=True)
     else:
         print(text, flush=True)
 
 
-def colorized(text, flag=None, colorize=True):
-    (prefix, color, attributes) = color_codes(flag)
+def colorized(text, flags=None, colorize=True):
+    (prefix, color, attributes) = color_codes(flags)
     if colorize:
-        if attributes:
-            return colored(text, attrs=attributes)
+        if attributes and color:
+            return colored(text, color, attrs=attributes)
         elif color:
             return colored(text, color)
+        elif attributes:
+            return colored(text, attrs=attributes)
         else:
             return text
     elif prefix:
@@ -219,25 +244,54 @@ def colorized(text, flag=None, colorize=True):
         return text
 
 
-def color_codes(flag):
+def color_codes(flags):
     color  = ''
     prefix = ''
-    attrib = ''
-    if flag is 'error':
+    attrib = []
+    if type(flags) is not list:
+        flags = [flags]
+    if 'error' in flags:
         prefix = 'ERROR'
         color = 'red'
-    elif flag is 'warning':
+    if 'warning' in flags:
         prefix = 'WARNING'
         color = 'yellow'
-    elif flag is 'info':
+    if 'info' in flags:
         color = 'green'
-    elif flag is 'underline':
-        attrib = ['underline']
-    elif flag is 'bold':
-        attrib = ['bold']
+    if 'white' in flags:
+        color = 'white'
+    if 'blue' in flags:
+        color = 'blue'
+    if 'grey' in flags:
+        color = 'grey'
+    if 'cyan' in flags:
+        color = 'cyan'
+    if 'underline' in flags:
+        attrib.append('underline')
+    if 'bold' in flags:
+        attrib.append('bold')
+    if 'reverse' in flags:
+        attrib.append('reverse')
+    if 'dark' in flags:
+        attrib.append('dark')
     return (prefix, color, attrib)
 
+
+# Miscellaneous utilities.
+# .............................................................................
 
+def port_occupied(host, port):
+    '''Returns True if the given port occupied, false if not.'''
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.bind((host, port))
+    except socket.error as e:
+        # This has value 48 on macOS but apparently 98 on others.
+        return (e.errno in [48, 98])
+    finally:
+        sock.close()
+
+
 # Plac annotations for main function arguments
 # .............................................................................
 # Argument annotations are: (help, kind, abbrev, type, choices, metavar)
@@ -254,10 +308,16 @@ main.__annotations__ = dict(
     terms    = 'one or more LCSH identifiers, like sh85118553',
 )
 
+
 # Entry point
 # .............................................................................
 
-def cli_main():
-    plac.call(main)
+plac.call(main)
 
-cli_main()
+
+# For Emacs users
+# ......................................................................
+# Local Variables:
+# mode: python
+# python-indent-offset: 4
+# End:
