@@ -72,34 +72,28 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
             msg('Identifiers must be LCSH identifiers, like sh960086680',
                 'error', colorize)
             return
-    if port and not port_occupied(host, int(port)):
-        msg('Nothing appears to be listening at port {}'.format(port),
-            'error', colorize)
-        return
     if not port:
         port = _DEFAULT_PORT
+    if not port_occupied(host, int(port)):
+        msg('Cannot connect to port {} -- is the database running?'.format(port),
+            'error', colorize)
+        return
 
     # Connect to the LCSH database.
-    url = 'mongodb://' + user + ':' + password + '@' + host
-    if port:
-        url = url + ':' + str(port)
-    url = url + '/' + _DB_NAME + '?authSource=admin'
-
+    url = ('mongodb://' + user + ':' + password + '@' + host + ':' + str(port)
+           + '/' + _DB_NAME + '?authSource=admin')
     db = MongoClient(url, tz_aware=True, serverSelectionTimeoutMS=_CONN_TIMEOUT)
-    lcsh_db = db[_DB_NAME]
-    lcsh    = lcsh_db.terms
+    lcsh = db[_DB_NAME].terms
 
     # Do the work.
+    msg('='*70, colorize)
     if trace:
         for t in terms:
-            msg('='*70, colorize)
             trace_term(lcsh, t, colorize)
     if describe:
         for t in terms:
-            msg('='*70, colorize)
             explain_term(lcsh, t, colorize)
-    if trace or describe:
-        msg('='*70, colorize)
+    msg('='*70, colorize)
 
 
 def trace_term(lcsh, term, colorize):
@@ -194,10 +188,14 @@ def port_occupied(host, port):
         sock.bind((host, port))
     except socket.error as e:
         # True if occupied, false if not
-        return (e.errno == 98)
+        # This has value 48 on macOS but apparently 98 on others.
+        return (e.errno in [48, 98])
     finally:
         sock.close()
 
+
+# Utilities for printing messages.
+# .............................................................................
 
 def msg(text, flag=None, colorize=True):
     if colorize:
@@ -215,11 +213,10 @@ def colorized(text, flag=None, colorize=True):
             return colored(text, color)
         else:
             return text
+    elif prefix:
+        return prefix + ': ' + text
     else:
-        if prefix:
-            return prefix + ': ' + text
-        else:
-            return text
+        return text
 
 
 def color_codes(flag):
