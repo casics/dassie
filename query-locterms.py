@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3
 #
 # @file    cataloguer.py
 # @brief   Creates a database of all projects in repository hosts
