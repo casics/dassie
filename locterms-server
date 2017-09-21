@@ -241,9 +241,12 @@ recover_database() {
 }
 
 save_conf_file() {
+    # Save info to configuration file & set permissions.
+
     echo "user=$user" > $conf_file
     echo "password=$password" >> $conf_file
     echo "port=$port" >> $conf_file
+    chmod og-rwx $conf_file
 }
 
 config_mongod_user() {
