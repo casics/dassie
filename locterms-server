@@ -210,8 +210,8 @@ recover_database() {
     start_mongod_process unauthenticated
 
     say info "Loading dump into running database instance. Note: this step"
-    say info "will take time and print a lot of messages. If it succeeds,"
-    say info "it will print 'finished restoring $dbpath.terms' near the end."
+    say info " will take time and print a lot of messages. If it succeeds,"
+    say info " it will print 'finished restoring $dbpath.terms' near the end."
     say info ""
     $dry_run || mongorestore -v --db $dbpath dump/lcsh
 
@@ -281,10 +281,10 @@ start_mongod_process() {
     if $foreground; then
         fork=""
         log_args=""
-        say info "database process will be run in the foreground."
+        say info "Database process will be run in the foreground."
     else
         # Default: run in the background
-        say info "database process will be forked and run in the background."
+        say info "Database process will be forked and run in the background."
     fi
 
     if [[ ! -z "${1:-}" ]]; then
@@ -516,7 +516,7 @@ log() {
 
 rotate_log() {
     if $use_log_file && [[ -e "$log_file" ]]; then
-        say info "Moving old log file to $log_file.old"
+        say info "Moving old log file to '$log_file.old'"
         /bin/mv $log_file $log_file.old
     fi
 }
