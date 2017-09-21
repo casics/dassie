@@ -297,6 +297,7 @@ start_mongod_process() {
 start_mongod() {
     # Do the actions to start the database, including possibly restoring it.
 
+    restore=false
     if (database_exists $dbpath); then
         say info "Using database in $dbpath."
     else
@@ -518,7 +519,9 @@ rotate_log() {
 }
 
 database_exists() {
-    [[ -d $1/lcsh && -e $1/WiredTiger ]]
+    # Clever approach to doing wildcarded existence check is thanks to
+    # https://stackoverflow.com/a/40808284/743730
+    [[ "$(echo $1/lcsh.*)" != "$1/lcsh.*" && -e $1/WiredTiger ]]
 }
 
 is_integer() {
