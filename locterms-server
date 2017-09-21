@@ -266,7 +266,7 @@ start_mongod_process() {
 
     local mongo_args="--pidfilepath $pid_file --directoryperdb --port $port"
     local log_args="--logpath $log_file --logRotate reopen --logappend"
-    local auth_args="--auth"
+    local auth_args="--auth --bind_ip 127.0.0.1"
     local fork="--fork "
     local restore=false
 
