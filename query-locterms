@@ -201,7 +201,7 @@ def port_occupied(host, port):
 
 def msg(text, flag=None, colorize=True):
     if colorize:
-        print(colorized(text), flush=True)
+        print(colorized(text, flag), flush=True)
     else:
         print(text, flush=True)
 
