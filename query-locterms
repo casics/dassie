@@ -147,7 +147,7 @@ def print_paths(paths, colorize):
 
 def print_one(term, indent='', colorize=False):
     label = term['label'] if term['label'] else '(no label)'
-    msg('{}{}: {}'.format(indent, colorized(term['_id'], 'underline', colorize), label))
+    msg('{}{}: {}'.format(indent, colorized(term['_id'], 'bold', colorize), label))
 
 
 def print_details(entry, colorize=False):
@@ -233,6 +233,8 @@ def color_codes(flag):
         color = 'green'
     elif flag is 'underline':
         attrib = ['underline']
+    elif flag is 'bold':
+        attrib = ['bold']
     return (prefix, color, attrib)
 
 
