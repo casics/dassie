@@ -205,7 +205,7 @@ recover_database() {
     save_conf_file
 
     say info "Extracting database dump from '$dump_file'."
-    $dry_run || tar xzf "$dump_file"
+    extract_database_dump
 
     start_mongod_process unauthenticated
 
@@ -213,7 +213,7 @@ recover_database() {
     say info " will take time and print a lot of messages. If it succeeds,"
     say info " it will print 'finished restoring $dbpath.terms' near the end."
     say info ""
-    $dry_run || mongorestore -v --db $dbpath dump/lcsh
+    restore_mongo_database
 
     say info ""
     say info "Configuring user credentials in database."
@@ -235,7 +235,7 @@ recover_database() {
     start_mongod_process
 
     say info "Cleaning up."
-    $dry_run || /bin/rm -rf dump
+    cleanup_database_dump
 
     status_mongod
 }
@@ -243,10 +243,24 @@ recover_database() {
 save_conf_file() {
     # Save info to configuration file & set permissions.
 
-    echo "user=$user" > "$conf_file"
-    echo "password=$password" >> "$conf_file"
-    echo "port=$port" >> "$conf_file"
-    chmod og-rwx "$conf_file"
+    if ! $dry_run; then
+        echo "user=$user" > "$conf_file"
+        echo "password=$password" >> "$conf_file"
+        echo "port=$port" >> "$conf_file"
+        chmod og-rwx "$conf_file"
+    fi
+}
+
+extract_database_dump() {
+    $dry_run || tar xzf "$dump_file"
+}
+
+cleanup_database_dump() {
+    $dry_run || /bin/rm -rf dump
+}
+
+restore_mongo_database() {
+    $dry_run || mongorestore -v --db $dbpath dump/lcsh
 }
 
 config_mongod_user() {
@@ -382,7 +396,7 @@ remove_stale_pid_file() {
         read running pid < <(mongod_running)
         if ! $running; then
             say warning "Removing stale file $pid_file."
-            rm -f "$pid_file"
+            $dry_run || rm -f "$pid_file"
         fi
     fi
 }
@@ -512,7 +526,7 @@ log() {
 rotate_log() {
     if $use_log_file && [[ -e "$log_file" ]]; then
         say info "Moving old log file to '$log_file.old'"
-        /bin/mv $log_file $log_file.old
+        $dry_run || /bin/mv $log_file $log_file.old
     fi
 }
 
