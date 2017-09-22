@@ -96,14 +96,14 @@ Creating local database directory lcsh-db.
 Moving old log file to /Users/mhucka/repos/locterms/locterms.log.old
 Saving user credentials to '/Users/mhucka/repos/locterms/locterms.conf'.
 Extracting database dump from 'data/lcsh-dump.tgz'.
-database process will be forked and run in the background.
+Database process will be forked and run in the background.
 Starting unconfigured database process.
 about to fork child process, waiting until server is ready for connections.
 forked process: 10606
 child process started successfully, parent exiting
 Loading dump into running database instance. Note: this step
-will take time and print a lot of messages. If it succeeds,
-it will print 'finished restoring lcsh-db.terms' near the end.
+ will take time and print a lot of messages. If it succeeds,
+ it will print 'finished restoring lcsh-db.terms' near the end.
 
 2017-09-21T10:38:07.332-0700    using write concern: w='1', j=false, fsync=false, wtimeout=0
 2017-09-21T10:38:07.332-0700    the --db and --collection args should only be used when restoring from a BSON file. Other uses are deprecated and will not exist in the future; use --nsInclude instead
