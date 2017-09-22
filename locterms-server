@@ -22,8 +22,8 @@ log_file="locterms.log"
 conf_file="locterms.conf"
 pid_file="mongod.pid"
 port=27017
-user=""
-password=""
+user=
+password=
 
 # Body of script.  No more configuration should be necessary after this point.
 # .............................................................................
@@ -31,14 +31,14 @@ password=""
 # Default variable values.
 
 program=${0##*/}
-args_given="$@"
+args_given="$*"
 chatty=true
 dry_run=false
 foreground=false
 use_log_file=true
 exit_code=0
 start_time=$(/bin/date '+%G-%m-%d:%H%M')
-action=""
+action=
 
 # Helper functions.
 
@@ -243,10 +243,10 @@ recover_database() {
 save_conf_file() {
     # Save info to configuration file & set permissions.
 
-    echo "user=$user" > $conf_file
-    echo "password=$password" >> $conf_file
-    echo "port=$port" >> $conf_file
-    chmod og-rwx $conf_file
+    echo "user=$user" > "$conf_file"
+    echo "password=$password" >> "$conf_file"
+    echo "port=$port" >> "$conf_file"
+    chmod og-rwx "$conf_file"
 }
 
 config_mongod_user() {
@@ -401,7 +401,7 @@ abspath() {
 
     if [[ -d "$1" ]]; then
         cd "$1"
-        echo `/bin/pwd -P`
+        /bin/pwd -P
     else
         cd `dirname "$1"`
         echo `/bin/pwd -P`/`basename "$1"`
@@ -481,14 +481,9 @@ say() {
 
     log "$msg"
 
-    local BLACK=`tput setaf 0`
     local RED=`tput setaf 1`
     local GREEN=`tput setaf 2`
     local YELLOW=`tput setaf 3`
-    local BLUE=`tput setaf 4`
-    local MAGENTA=`tput setaf 5`
-    local CYAN=`tput setaf 6`
-    local WHITE=`tput setaf 7`
     local RESET=`tput sgr0`
 
     case $code in
