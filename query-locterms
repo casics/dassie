@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
 '''
-query-locterms: interactively print information about an LCSH term
+query-locterms: interactively print information about an LCSH term.
 
 Usage:
     query-locterms -u USER -p PASSWORD -d IDENTIFIER [IDENTIFIER ...]
 or
     query-locterms -u USER -p PASSWORD -t IDENTIFIER [IDENTIFIER ...]
 
-This program will connect to the LoCTerms database using the user login name
-and password provided as arguments (-u and -p, respectively). Additional
-arguments can be used to specify the host (-H) and port (-P) on which the
-database process is listening.  The default for the host is "localhost" and
-the default port is whatever is configured in your instance of MongoDB.
+Additional arguments can be used to specify the host (-H) and port (-P) on
+which the database process is listening.  The default for the host is
+"localhost" and the default port is whatever is configured in your instance
+of MongoDB.
+
+You can optionally provide the user name and password as arguments -u and -p
+(respectively), but note that this is insecure on multiuser computer systems
+where other users could run "ps" in the background and see your credentials.
 
 The following actions are understood; note that only one can be indicated
-at a time:
+at a time, but one or the other must be provided:
 
   -d    Describe the term(s) given on the command line
   -t    Trace the path from the given term(s) to root terms
 
 The remaining arguments on the command line are assumed to be identifiers of
 terms in the Library of Congress Subject Headings (LCSH).
+
 '''
 
 __version__ = '1.0.0'
@@ -28,6 +32,7 @@ __author__  = 'Michael Hucka <mhucka@caltech.edu>'
 __email__   = 'mhucka@caltech.edu'
 __license__ = 'GPLv3'
 
+import getpass
 import sys
 import operator
 import os
@@ -59,24 +64,28 @@ _DB_NAME = 'lcsh-db'
 
 def main(describe=False, trace=False, user=None, password=None,
          host="localhost", port=None, nocolor=False, *terms):
-    '''Query LoCTerms for information about an LCSH term. The LoCTerms database
-process must already be running.  This program will connect to the database
-using the user login name and password provided as arguments (-u and -p,
-respectively). Additional arguments can be used to specify the host (-H) and
-port (-P) on which the database process is listening.  The default for the
-host is "localhost" and the default port is whatever is configured in your
-instance of MongoDB.
+    '''Query LoCTerms for information about an LCSH term.  The LoCTerms
+database process must already be running.  This program will prompt for the
+user name and password to use to connect to the database.  Additional
+arguments can be used to specify the host (-H) and port (-P) on which the
+database process is listening.  The default for the host is "localhost" and
+the default port is whatever is configured in your instance of MongoDB.
+
+You can optionally provide the user name and password as arguments -u and -p
+(respectively), but note that this is insecure on multiuser computer systems
+where other users could run "ps" in the background and see your credentials.
 
 This program also requires an argument to dictate the action to perform.
 The following actions are understood; note that only one can be indicated
-at a time:
+at a time, but one or the other must be given:
 
   -d    Describe the term(s) given on the command line
   -t    Trace the path from the given term(s) to root terms
 
 Finally, the remaining arguments on the command line are assumed to be
 identifiers of terms in the Library of Congress Subject Headings (LCSH).
-'''
+
+    '''
     # Our default is to color output for easier reading, which means the
     # command line flag makes more sense as a negated value (i.e., "nocolor").
     # Dealing with a negated variable is confusing, so turn it around here.
@@ -88,7 +97,10 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     if trace and describe:
         raise SystemExit(colorized('Can only perform one action at a time.', 'error'))
     if not user or not password:
-        raise SystemExit(colorized('Must provide a database user login and password.', 'error'))
+        user = input("User name: ")
+        password = getpass.getpass()
+        if not user or not password:
+            raise SystemExit(colorized('Must provide a database user login and password.', 'error'))
     if not terms:
         raise SystemExit(colorized('No LCSH terms given. Use -h for help.', 'error'))
     if not port:
@@ -97,7 +109,7 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     # Do some simple sanity checks:
     for t in terms:
         if not t.startswith('sh'):
-            msg('Identifiers must be LCSH identifiers, like sh960086680',
+            msg('Identifiers must be LCSH identifiers, like sh89003285',
                 'error', colorize)
             return
     if not port_occupied(host, int(port)):
