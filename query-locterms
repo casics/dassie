@@ -93,23 +93,23 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
 
     # Check arguments.
     if not trace and not describe:
-        raise SystemExit(colorized('No action specified. Use -h for help.', 'error'))
+        raise SystemExit(colorcode('No action specified. Use -h for help.', 'error'))
     if trace and describe:
-        raise SystemExit(colorized('Can only perform one action at a time.', 'error'))
+        raise SystemExit(colorcode('Can only perform one action at a time.', 'error'))
     if not user or not password:
         user = input("User name: ")
         password = getpass.getpass()
         if not user or not password:
-            raise SystemExit(colorized('Must provide a database user login and password.', 'error'))
+            raise SystemExit(colorcode('Must provide a database user login and password.', 'error'))
     if not terms:
-        raise SystemExit(colorized('No LCSH terms given. Use -h for help.', 'error'))
+        raise SystemExit(colorcode('No LCSH terms given. Use -h for help.', 'error'))
     if not port:
         port = _DEFAULT_PORT
 
     # Do some simple sanity checks:
     for t in terms:
         if not t.startswith('sh'):
-            msg('Identifiers must be LCSH identifiers, like sh89003285',
+            msg('Identifiers must be LCSH identifiers, like sh89003287',
                 'error', colorize)
             return
     if not port_occupied(host, int(port)):
@@ -124,7 +124,7 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     lcsh = db[_DB_NAME].terms
 
     # Do the work.
-    msg(colorized('='*70, 'dark', colorize))
+    msg('='*70, 'dark', colorize)
     if trace:
         for t in terms:
             trace_term(lcsh, t, colorize)
@@ -132,7 +132,7 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         for t in terms:
             explain_term(lcsh, t, colorize)
             msg('')
-    msg(colorized('='*70, 'dark', colorize))
+    msg('='*70, 'dark', colorize)
 
 
 def trace_term(lcsh, term, colorize):
@@ -162,7 +162,7 @@ def get_paths(lcsh, entry):
         for broader in entry['broader']:
             parent = lcsh.find_one({'_id': broader})
             if not parent:
-                raise SystemExit(colorized('Broader term {} not found.'.format(broader),
+                raise SystemExit(colorcode('Broader term {} not found.'.format(broader),
                                            'error', colorize))
             if parent['broader']:
                 for path in get_paths(lcsh, parent):
@@ -192,41 +192,41 @@ def print_paths(paths, colorize):
 def print_one(term, indent='', colorize=False):
     '''Print one term, as an identifier plus its label.'''
     label = term['label'] if term['label'] else '(no label)'
-    msg('{}{}: {}'.format(indent, colorized(term['_id'], 'bold', colorize), label))
+    msg('{}{}: {}'.format(indent, colorcode(term['_id'], 'bold', colorize), label))
 
 
 def print_details(entry, colorize=False):
     '''Print details about a single term.'''
     label = entry['label'] if entry['label'] else '(no label)'
-    msg(colorized(entry['_id'], 'bold', colorize) + ':')
-    msg(colorized('         URL: ', 'dark', colorize) +
+    msg(colorcode(entry['_id'], 'bold', colorize) + ':')
+    msg(colorcode('         URL: ', 'dark', colorize) +
         'http://id.loc.gov/authorities/subjects/' + entry['_id'] + '.html')
-    msg(colorized('       label: ', 'dark', colorize) + label)
+    msg(colorcode('       label: ', 'dark', colorize) + label)
     if entry['alt_labels']:
-        msg(colorized('  alt labels: ', 'dark', colorize)
+        msg(colorcode('  alt labels: ', 'dark', colorize)
             + '\n              '.join(entry['alt_labels']))
     else:
-        msg(colorized('  alt labels: (none)', 'dark', colorize))
+        msg('  alt labels: (none)', 'dark', colorize)
     if entry['narrower']:
-        msg(colorized('    narrower: ', 'dark', colorize) + ', '.join(entry['narrower']))
+        msg(colorcode('    narrower: ', 'dark', colorize) + ', '.join(entry['narrower']))
     else:
-        msg(colorized('    narrower: (none)', 'dark', colorize))
+        msg('    narrower: (none)', 'dark', colorize)
     if entry['broader']:
-        msg(colorized('     broader: ', 'dark', colorize) + ', '.join(entry['broader']))
+        msg(colorcode('     broader: ', 'dark', colorize) + ', '.join(entry['broader']))
     else:
-        msg(colorized('     broader: (none)', 'dark', colorize))
+        msg('     broader: (none)', 'dark', colorize)
     if entry['topmost']:
-        msg(colorized('     topmost: ', 'dark', colorize) + ', '.join(entry['topmost']))
+        msg(colorcode('     topmost: ', 'dark', colorize) + ', '.join(entry['topmost']))
     else:
-        msg(colorized('     topmost: (none)', 'dark', colorize))
+        msg('     topmost: (none)', 'dark', colorize)
     if entry['note']:
-        prefix = colorized('        note: ', 'dark', colorize)
+        prefix = colorcode('        note: ', 'dark', colorize)
         indent = len(prefix)
         text = pprint.pformat(entry['note'], width=77-indent)
         text = text[1:-1]
         msg(prefix + text)
     else:
-        msg(colorized('        note: (none)', 'dark', colorize))
+        msg('        note: (none)', 'dark', colorize)
 
 
 # Utilities for printing messages.
@@ -234,12 +234,12 @@ def print_details(entry, colorize=False):
 
 def msg(text, flags=None, colorize=True):
     if colorize:
-        print(colorized(text, flags), flush=True)
+        print(colorcode(text, flags), flush=True)
     else:
         print(text, flush=True)
 
 
-def colorized(text, flags=None, colorize=True):
+def colorcode(text, flags=None, colorize=True):
     (prefix, color, attributes) = color_codes(flags)
     if colorize:
         if attributes and color:
