@@ -22,7 +22,7 @@ log_file="locterms.log"
 conf_file="locterms.conf"
 pid_file="mongod.pid"
 port=27017
-user=
+username=
 password=
 
 # Body of script.  No more configuration should be necessary after this point.
@@ -57,8 +57,7 @@ unpack and restore the database archive before starting the server.
 (Subsequent invocations of $program will not need to do this,
 and startup will be faster.)  The first time will also require you to supply
 a database user login and password to be used for authenticating network
-connections to the database.  The values will be written to the file
-"$conf_file".
+connections to the database.
 
 Normally, the database server process is started in the background.  This
 script makes the database write diagnostic messages to the log file located at
@@ -69,11 +68,13 @@ option; note that doing so will mean that output will NOT be written to the
 log file.
 
 The database will listen on the network port $port unless it is changed using
-the argument "-P".
+the argument "-p".
 
-When connecting clients to the database, use the configuration values for
-user name, login and port number found in the LoCTerms config file:
+When connecting clients to the database, use the user name, password and port
+number provided during the first-time configuration process.  The port number
+is saved in the config file located at
 "$conf_file".
+The path to the config file can be changed using the "-c" option.
 
 Options:
     -c, --config        Use the given file as the LoCTerms configuration file
@@ -81,10 +82,8 @@ Options:
     -h, --help          Print this help message and exit
     -l, --logfile       Write logs to the given file instead of the default
     -n, --dry-run       Show what would be done, but don't do it
-    -p, --password      Set up authentication (use together with -u)
-    -P, --port          Use the given port instead of the default
+    -p, --port          Use the given port instead of the default
     -q, --quiet         Don't display informative messages
-    -u, --user          Set up authentication (use together with -p)
     -v, --version       Display the current version number and exit
 
 EOF
@@ -122,20 +121,12 @@ parse_args() {
             -n | --dry-run )
                 dry_run=true
                 ;;
-            -p | --password )
-                shift
-                password=$1
-                ;;
-            -P | --port )
+            -p | --port )
                 shift
                 port=$1
                 ;;
             -q | --quiet )
                 chatty=false
-                ;;
-            -u | --user )
-                shift
-                user=$1
                 ;;
             -v | --version )
                 print_version
@@ -201,8 +192,9 @@ dispatch_action() {
 }
 
 recover_database() {
-    say info "Saving user credentials to '$conf_file'."
-    save_conf_file
+    $dry_run || mkdir -p "$dbpath"
+
+    read_credentials
 
     say info "Extracting database dump from '$dump_file'."
     extract_database_dump
@@ -214,6 +206,9 @@ recover_database() {
     say info " it will print 'finished restoring $dbpath.terms' near the end."
     say info ""
     restore_mongo_database
+
+    say info "Saving info to '$conf_file'."
+    save_conf_file
 
     say info ""
     say info "Configuring user credentials in database."
@@ -241,11 +236,10 @@ recover_database() {
 }
 
 save_conf_file() {
-    # Save info to configuration file & set permissions.
+    # Save info to configuration file & set its permissions.
+    # Currently we only save the port number.
 
     if ! $dry_run; then
-        echo "user=$user" > "$conf_file"
-        echo "password=$password" >> "$conf_file"
         echo "port=$port" >> "$conf_file"
         chmod og-rwx "$conf_file"
     fi
@@ -268,10 +262,10 @@ config_mongod_user() {
         # Using --quiet to mongod doesn't stop echoing commands, so
         # need to use output rediction.
         mongo admin <<EOF > /dev/null
-db.createUser( { user: "$user", pwd: "$password", roles: [ { role: "read", db: "lcsh-db" } ] } );
+db.createUser( { user: "$username", pwd: "$password", roles: [ { role: "read", db: "lcsh-db" } ] } );
 EOF
         if (($? > 0)); then
-            say error "Unable to configure user creditials."
+            say error "Unable to configure user credentials."
             say error "You should stop the database and investigate."
             quit 1
         fi
@@ -323,18 +317,9 @@ start_mongod() {
         restore=true
     fi
 
-    if $restore; then
-        if [[ -z $user || -z $password ]]; then
-            say error "Must supply user and password to set up database."
-            quit 1
-        else
-            say info "Creating local database directory $dbpath."
-            $dry_run || mkdir -p "$dbpath"
-        fi
-    fi
-
     # Recover the database if necessary.
     if $restore; then
+        say info "Creating local database directory $dbpath."
         rotate_log
         recover_database
     else
@@ -372,20 +357,6 @@ check_log_file() {
         if [[ -e "$log_file" && ! -w "$log_file" ]]; then
             printf '%s\n' "Unable to write log file $log_file."
             use_log_file=0
-            quit 1
-        fi
-    fi
-}
-
-check_conf_file() {
-    if [[ -n $conf_file ]]; then
-        . $conf_file
-        if [[ -z $user ]]; then
-            say error "No user name set for authentication."
-            quit 1
-        fi
-        if [[ -z $password ]]; then
-            say error "No password set for authentication."
             quit 1
         fi
     fi
@@ -489,28 +460,34 @@ say() {
     # Takes 2 arguments: a severity code, and a text string.
     # Prints a message to the terminal, unless the code is "note"
     # and $chatty is not 1.  Always logs the message.
+    # Optional 3rd argument can be "-n" to prevent newline.
 
     local code=$1
     local msg=$2
-
-    log "$msg"
+    local nonewline=$3
 
     local RED=`tput setaf 1`
     local GREEN=`tput setaf 2`
     local YELLOW=`tput setaf 3`
     local RESET=`tput sgr0`
 
+    if [[ -z "$nonewline" ]]; then
+        newline="\n"
+    else
+        newline=
+    fi
+
     case $code in
         info)
             if $chatty; then
-                printf "${GREEN}%s${RESET}\n" "$2"
+                printf "${GREEN}%s${RESET}${newline}" "$2"
             fi
             ;;
         warning)
-            printf "${YELLOW}%s${RESET}\n" "$2"
+            printf "${YELLOW}%s${RESET}${newline}" "$2"
             ;;
         error)
-            printf "${RED}%s${RESET}\n" "$2"
+            printf "${RED}%s${RESET}${newline}" "$2"
             ;;
     esac
 }
@@ -538,6 +515,31 @@ database_exists() {
 
 is_integer() {
     [[ $1 =~ ^[0-9]+$ ]]
+}
+
+read_credentials() {
+    # Read user name and password.  Verify what the use types by making them
+    # type it twice.  Don't allow blank passwords.  Encrypt and uri-encode
+    # the password
+
+    say info "Please provide a user name: " -n
+    read username
+    while true; do
+        say info "Please provide a password: " -n
+        read -s password
+        echo
+        say info "Please type the password again: " -n
+        read -s password2
+        echo
+        if [[ -z "$password" ]]; then
+            say error "Sorry, can't accept blank passwords.  Please try again."
+        elif [[ "$password" != "$password2" ]]; then
+            say error "Passwords did not match.  Please try again."
+        else
+            say warning "Please record the user name & password in a safe location."
+            break
+        fi
+    done
 }
 
 # Main entry point.
