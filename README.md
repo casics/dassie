@@ -12,12 +12,19 @@ LoCTerms implements a database of terms from the [Library of Congress Subject He
 ☀ Introduction
 -----------------------------
 
-In CASISCS, we annotated repository entries with terms from the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  We developed a simple hierarchical browser for the terms to allow search and navigation in the term hierarchy. To support this functionality, we converted a copy of the LCSH terms into a database that makes explicit the ["is-a"](https://en.wikipedia.org/wiki/Hyponymy_and_hypernymy) relationships between terms.  The database we use is [MongoDB](https://mongodb.com).  The result, LoCTerms (for "Library of Congress Terms"), allows programs to make normal MongoDB network API calls from any programming language using any of the different [MongoDB drivers available](https://docs.mongodb.com/ecosystem/drivers/).
+In [CASISCS](https://github.com/casics), we annotate GitHub repository entries with terms from the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  To do this, we developed a simple hierarchical browser for LCSH terms to allow search and navigation in the term hierarchy. To support this functionality, we converted a copy of the LCSH terms into a database that makes explicit the ["is-a"](https://en.wikipedia.org/wiki/Hyponymy_and_hypernymy) relationships between LCSH terms.  The database we use is [MongoDB](https://mongodb.com).  The result, LoCTerms (short for "Library of Congress Terms"), is a system that allows programs to make normal MongoDB network API calls from any programming language.
 
-LoCTerms includes a command-line application, `query-locterms`, that can be used to explore the database interactively and also serves as an example of how to write a Python program that accesses the database.  The program can perform two operations: print descriptive information about one or more LCSH terms, and trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms.  The following is the example output of using `query-locterms` to describe the term `sh85118400`:
+▶︎ Basic operation
+------------------
+
+LoCTerms includes a program, `locterms-server` to load and run a MongoDB database containing the LCSH term data, and a command-line application, `query-locterms`, that can be used to explore the database interactively. The latter also serves as an example of how to write a Python client program that accesses the database over the network&mdash;the same could be implemented using any of the different [MongoDB drivers available](https://docs.mongodb.com/ecosystem/drivers/).
+
+The basic operation is simple: start the database process using `locterms-server start`, and then connect to the database to perform queries and obtain data.  The operation of `locterms-server` is described in the next section below.
+
+`query-locterms` can perform two operations: print descriptive information about one or more LCSH terms, and trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms.  The following is an example of doing the first operation; this shows the output of using `query-locterms` to describe the term `sh85118400`:
 
 ```csh
-> ./query-locterms -u USER -p PASSWORD -d sh85118400
+> ./query-locterms -d sh85118400
 ======================================================================
 sh85118400:
          URL: http://id.loc.gov/authorities/subjects/sh85118400.html
@@ -33,7 +40,7 @@ sh85118400:
 And here is an example of output from using `query-locterms` to trace the term graph from `sh85118400` upward until it reaches the top-most LCSH terms.  This shows that the hypernym links from `sh85118400` end in 4 terms (`sh85008810`, `sh2002007885`, `sh85010480`, and `sh99005029`) that have no further hypernyms, and there are 5 paths that lead there from `sh85118400`:
 
 ```csh
-> ./query-locterms -u USER -p PASSWORD -t sh85118400
+> ./query-locterms -t sh85118400
 ======================================================================
 sh85008810: Associations, institutions, etc
 └─ sh85048306: Financial institutions
@@ -70,6 +77,8 @@ sh99005029: Civilization
                └─ sh85118400: School savings banks
 ```
 
+To prevent security risks that would come from having unrestricted network access to the database, the database requires the use of a user name and password; these are set at the time of first creating installing and configuring LoCTerms database using `locterms-server` (described in the next section).  By default, `query-locterms` uses the operating system's keyring/keychain functionality to get the user name and password needed to access the LoCTerms database over the network so that you do not have to type them every time you call `query-locterms`.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.  It is also possible to supply a user name and password directly using the `-u` and `-p` options, respectively, but this is discouraged because it is insecure on multiuser computer systems. (Other users could run `ps` in the background and see your credentials).
+
 ☛ Installation and configuration
 --------------------------------
 
@@ -79,22 +88,25 @@ Before using LoCTerms, you will need to install the following software that LoCT
 * (If using [MacPorts](https://www.macports.org) on macOS) [mongo-tools](https://www.macports.org/ports.php?by=name&substr=mongo-tools)
 * [PyMongo](https://api.mongodb.com/python/current/) for Python 3 (to use the short Python programs provided here)
 
-On macOS, we use the [MacPorts](https://www.macports.org) packages [mongodb](https://www.macports.org/ports.php?by=name&substr=mongodb), [mongo-tools](https://www.macports.org/ports.php?by=name&substr=mongo-tools) and [`py-pymongo`](https://www.macports.org/ports.php?by=name&substr=py-pymongo) to install the dependencies above.  We use Python to implement the short programs in this repository, but the database served by LoCTerms is not dependent on Python and you can use any [MongoDB API library](https://docs.mongodb.com/ecosystem/drivers/) to interact with it once it is installed and running.
+On macOS, we use the [MacPorts](https://www.macports.org) packages [mongodb](https://www.macports.org/ports.php?by=name&substr=mongodb), [mongo-tools](https://www.macports.org/ports.php?by=name&substr=mongo-tools) and [py-pymongo](https://www.macports.org/ports.php?by=name&substr=py-pymongo) to install the dependencies above.  We use Python to implement the short programs in this repository, but the database served by LoCTerms is not dependent on Python and you can use any [MongoDB API library](https://docs.mongodb.com/ecosystem/drivers/) to interact with it once it is installed and running.
 
-The next step after installing the dependencies above is to start a shell terminal in the directory where you installed LoCTerms.  First, choose a user login and password that you want to use for network access to the database.  (The database will be set up to listen only on local network ports, so the security risks are reduced, but it is never a good idea to provide unrestricted network access to a service.)  Next, execute the program `locterms-server` with the argument `start` and the two arguments `--user` and `--password`.
+The next step after installing the dependencies above is to start a shell terminal in the directory where you installed LoCTerms.  First, choose a user login and password that you want to use for network access to the database.  Next, in a terminal shell with the LoCTerms directory as the current working directory, execute the program `locterms-server` with the argument `start`:
 
 ```csh
-./locterms-server -u USERNAME -p PASSWORD start
+./locterms-server start
 ```
 
-The first time `locterms-server` is executed, it will load the database contents from a database dump.   This will take extra time but only needs to be done once.  The output should look something like the following:
+The first time `locterms-server` is executed, it will (1) prompt you for the user name and password and configure the MongoDB database to allow only those credentials to read the database over the network, and (2) load the database contents from a database dump.  This will take extra time but only needs to be done once.  The output should look something like the following:
 
 ```txt
 No database found in 'lcsh-db'.
 Will begin by setting up database.
 Creating local database directory lcsh-db.
-Moving old log file to /Users/mhucka/repos/locterms/locterms.log.old
-Saving user credentials to '/Users/mhucka/repos/locterms/locterms.conf'.
+Moving old log file to '/Users/mhucka/repos/casics-locterms/locterms.log.old'
+Please provide a user name: 
+Please provide a password:
+Please type the password again:
+Please record the user name & password in a safe location.
 Extracting database dump from 'data/lcsh-dump.tgz'.
 Database process will be forked and run in the background.
 Starting unconfigured database process.
@@ -131,14 +143,36 @@ Cleaning up.
 LoCTerms database process is running with PID 10714.
 ```
 
+This procedure will leave the database running on your computer, so that you can immediately try `query-locterms` to experiment with the system.
+
+You can stop the database using the `stop` command, like this:
+
+```csh
+./locterms-server stop
+```
+
+You can also query for the status of the database process using the `status` command, like this:
+
+```csh
+./locterms-server status
+```
+
+There are other options for `locterms-server`.  You can use the `-h` option to display a helpful summary.
+
+```csh
+./locterms-server -h
+```
+
+Note that database process is not automatically restarted after you reboot your computer.  You can set up your computer to restart the process automatically, but the procedure for doing so depends on your computer's operating system.
+
 
 ⁇ Getting help and support
 --------------------------
 
 If you find an issue, please submit it in [the GitHub issue tracker](https://github.com/casics/locterms/issues) for this repository.
 
-♬ Contributing &mdash; info for developers
-------------------------------------------
+♬ Contributing: info for developers
+-----------------------------------
 
 A lot remains to be done on CASICS in many areas.  We would be happy to receive your help and participation if you are interested.  Please feel free to contact the developers either via GitHub or the mailing list [casics-team@googlegroups.com](casics-team@googlegroups.com).
 
