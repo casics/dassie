@@ -1,43 +1,44 @@
 #!/usr/bin/env python2.7
-#
-# @file    parse-lcsh-stream.py
-# @brief   Parse LCSH .nt file and build a simple index in a MongoDB database
-# @author  Michael Hucka
-#
-# <!---------------------------------------------------------------------------
-# Copyright (C) 2015 by the California Institute of Technology.
-# This software is part of CASICS, the Comprehensive and Automated Software
-# Inventory Creation System.  For more information, visit http://casics.org.
-# ------------------------------------------------------------------------- -->
-#
-# SUMMARY
-#
-# This program is designed to parse the Library of Congress subject terms
-# file "authoritiessubjects.nt.skos" (from http://id.loc.gov/download/) and
-# create a MongoDB database collection containing the terms found in the file.
-# The parts of the LCSH terms we are interested in are the following:
-# - the identifier, from (e.g.) http://id.loc.gov/authorities/subjects/sh85098119
-# - one preflabel (a string)
-# - one or more altlabels
-# - one or more broader terms
-# - one or more narrower terms
-# - one 'note' associated with a term
-#
-# PREREQUISITES
-#
-# This purposefully uses Python 2.7, because on my OS X 10.10 laptop, I
-# couldn't get RDF installed under python 3.
-#
-# This assumes that a Mongo DB is already running on the local host.  It also
-# assumes that there are no authentication issues.  (If those conditions are
-# not held, you need to change the parameters to the MongoClient call below.)
-#
-# USAGE
-#
-# Start MongoDB on the local host.
-# Run the following in a terminal shell:
-#   ./parse-lcsh-and-create-db.py  authoritiessubjects.nt.skos
-#
+'''
+ Parse LCSH authoritiessubjects.nt.skos.gz and build a MongoDB db
+
+SUMMARY
+
+This script parses a Library of Congress "LC Subject Headings (SKOS/RDF)" file
+and creates a MongoDB database collection containing the terms found in the
+file.  (The file can be downloaded from http://id.loc.gov/download/ and is
+named "authoritiessubjects.nt.skos".  The copy from 25 April 2016 is saved
+in the subdirectory ../data in this repo.)
+
+The parts of the LCSH name authority file that are extracted by this program
+are the following:
+- the identifier, from (e.g.) http://id.loc.gov/authorities/subjects/sh85098119
+- one preflabel (a string)
+- one or more altlabels
+- one or more broader terms
+- one or more narrower terms
+- one 'note' associated with a term
+
+PREREQUISITES
+
+This purposefully uses Python 2.7, because on my OS X 10.10 system, I
+couldn't get the Python RDF library installed under Python 3.
+
+This assumes that a Mongo DB is already running on the local host.  It also
+assumes that there are no authentication issues.  (If those conditions are
+not held, you need to change the parameters to the MongoClient call below.)
+
+USAGE
+
+Start MongoDB on the local host.
+Run the following in a terminal shell:
+  ./parse-lcsh-and-create-db.py  authoritiessubjects.nt.skos
+'''
+
+__version__ = '1.0.0'
+__author__  = 'Michael Hucka <mhucka@caltech.edu>'
+__email__   = 'mhucka@caltech.edu'
+__license__ = 'GPLv3'
 
 import RDF
 import sys
