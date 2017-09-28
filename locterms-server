@@ -240,7 +240,7 @@ save_conf_file() {
     # Currently we only save the port number.
 
     if ! $dry_run; then
-        echo "port=$port" >> "$conf_file"
+        echo "port=$port" > "$conf_file"
         chmod og-rwx "$conf_file"
     fi
 }
