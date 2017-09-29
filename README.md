@@ -12,7 +12,7 @@ LoCTerms implements a database of terms from the [Library of Congress Subject He
 ☀ Introduction
 -----------------------------
 
-In [CASISCS](https://github.com/casics), we annotate GitHub repository entries with terms from the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  To do this, we developed a simple hierarchical browser for LCSH terms to allow search and navigation in the term hierarchy. To support this functionality, we converted a copy of the LCSH terms into a database that makes explicit the ["is-a"](https://en.wikipedia.org/wiki/Hyponymy_and_hypernymy) relationships between LCSH terms.  The database we use is [MongoDB](https://mongodb.com).  The result, LoCTerms (short for "Library of Congress Terms"), is a system that allows programs to make normal MongoDB network API calls from any programming language.
+In [CASICS](https://github.com/casics), we annotate GitHub repository entries with terms from the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  To do this, we developed a simple hierarchical browser for LCSH terms to allow search and navigation in the term hierarchy. To support this functionality, we converted a copy of the LCSH terms into a database that makes explicit the ["is-a"](https://en.wikipedia.org/wiki/Hyponymy_and_hypernymy) relationships between LCSH terms.  The database we use is [MongoDB](https://mongodb.com).  The result, LoCTerms (short for "Library of Congress Terms"), is a system that allows programs to make normal MongoDB network API calls from any programming language.
 
 ▶︎ Basic operation
 ------------------
