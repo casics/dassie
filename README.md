@@ -95,7 +95,7 @@ Each entry in the database (known as _documents_ in MongoDB parlance) is a struc
 }
 ```
 
-A term in this database is indexed by its LCSH identifier; for example, `sh89003287`.  Identifiers in this scheme are strings that being with two letters followed by a series of integers.  The identifier is used as the value of the `_id` field.  (Note that in a slight deviation from common MongoDB practice, the `_id` field holds the identifier as a string, rather than an `ObjectId` object.  This makes programming more convenient.)
+A term in this database is indexed by its LCSH identifier; for example, `sh89003287`.  Identifiers in this scheme are strings that being with two letters followed by a series of integers.  The identifier is used as the value of the `_id` field.  (Note that in a slight deviation from common MongoDB practice, the `_id` field holds the identifier as a string, rather than an `ObjectId` object.  This makes using LoCTerms simpler.)
 
 The meanings of the fields are as follows:
 
