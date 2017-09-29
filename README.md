@@ -79,6 +79,37 @@ sh99005029: Civilization
 
 To prevent security risks that would come from having unrestricted network access to the database, the database requires the use of a user name and password; these are set at the time of first creating installing and configuring LoCTerms database using `locterms-server` (described in the next section).  By default, `query-locterms` uses the operating system's keyring/keychain functionality to get the user name and password needed to access the LoCTerms database over the network so that you do not have to type them every time you call `query-locterms`.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.  It is also possible to supply a user name and password directly using the `-u` and `-p` options, respectively, but this is discouraged because it is insecure on multiuser computer systems. (Other users could run `ps` in the background and see your credentials).
 
+🗄 Database structure details
+----------------------------
+
+Each entry in the database (known as _documents_ in MongoDB parlance) is a structure with the following field-and-value pairs.  The value types are always either a string, a list of strings, an empty list, or the value `None`.
+
+```javascript
+{
+  "_id": "string",
+  "label": "string",
+  "alt_labels": [ "string", "string", ...],
+  "note": "string",
+  "broader": [ "id", "id", ...],
+  "narrower": [ "id", "id", ...],
+}
+```
+
+A term in this database is indexed by its LCSH identifier; for example, `sh89003287`.  Identifiers in this scheme are strings that being with two letters followed by a series of integers.  The identifier is used as the value of the `_id` field.  (Note that in a slight deviation from common MongoDB practice, the `_id` field holds the identifier as a string, rather than an `ObjectId` object.  This makes programming more convenient.)
+
+The meanings of the fields are as follows:
+
+| Field        | Description | SKOS RDF component |
+|--------------|-------------|-------------------|
+| `_id`        | The term identifier | URI of the term in the LCSH Linked Data service |
+| `label`      | The preferred descriptive label for the term | `http://www.w3.org/2004/02/skos/core#prefLabel` |
+| `alt_labels` | One or more alternative descriptive labels | `http://www.w3.org/2004/02/skos/core#altLabel` |
+| `note`       | Notes (from LCSH) about the term | `http://www.w3.org/2004/02/skos/core#note` |
+| `broader`   | List of hypernyms of the term | `http://www.w3.org/2004/02/skos/core#broader` |
+| `narrower`   | List of hyponyms of the term | `http://www.w3.org/2004/02/skos/core#narrower` |
+
+The Library of Congress runs a [Linked Data Service](http://id.loc.gov/about/), and callers can look up more information about a term by dereferencing the URL `http://id.loc.gov/authorities/subjects/IDENTIFIER` where `IDENTIFIER` is the value of the `_id` in the LoCTerms database.  For instance, you can visit the page `http://id.loc.gov/authorities/subjects/sh89003287` in your web browser to find out more about `sh89003287`.
+
 ☛ Installation and configuration
 --------------------------------
 
@@ -163,8 +194,7 @@ There are other options for `locterms-server`.  You can use the `-h` option to d
 ./locterms-server -h
 ```
 
-Note that database process is not automatically restarted after you reboot your computer.  You can set up your computer to restart the process automatically, but the procedure for doing so depends on your computer's operating system.
-
+Note that database server process is **not automatically restarted** after you reboot your computer.  You can set up your computer to restart the process automatically, but the procedure for doing so depends on your computer's operating system.
 
 ⁇ Getting help and support
 --------------------------
