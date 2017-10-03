@@ -84,8 +84,8 @@ be indicated by using one of the following two command line flags:
 By default, this uses the operating system's keyring/keychain functionality
 to get the user name and password needed to access the LoCTerms database over
 the network.  If no such credentials are found, it will query the user
-interactively for the user name and password, and then store them in the
-keyring/keychain unless the -X argument is given so that it does not have to
+interactively for the user name and password, and (unless the -X argument is
+given) then store them in the keyring/keychain so that it does not have to
 ask again in the future.  It is also possible to supply a user name and
 password directly using the -u and -p options, respectively, but this is
 discouraged because it is insecure on multiuser computer systems. (Other
