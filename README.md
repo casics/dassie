@@ -92,6 +92,7 @@ Each entry in the database (known as _documents_ in MongoDB parlance) is a struc
   "note": "string",
   "broader": [ "id", "id", ...],
   "narrower": [ "id", "id", ...],
+  "topmost": [ "id", "id", ...]
 }
 ```
 
@@ -105,10 +106,13 @@ The meanings of the fields are as follows:
 | `label`      | The preferred descriptive label for the term | `http://www.w3.org/2004/02/skos/core#prefLabel` |
 | `alt_labels` | One or more alternative descriptive labels | `http://www.w3.org/2004/02/skos/core#altLabel` |
 | `note`       | Notes (from LCSH) about the term | `http://www.w3.org/2004/02/skos/core#note` |
-| `broader`   | List of hypernyms of the term | `http://www.w3.org/2004/02/skos/core#broader` |
+| `broader`    | List of hypernyms of the term | `http://www.w3.org/2004/02/skos/core#broader` |
 | `narrower`   | List of hyponyms of the term | `http://www.w3.org/2004/02/skos/core#narrower` |
+| `topmost`    | List of topmost hyponyms of the term | (computed) |
 
 The Library of Congress runs a [Linked Data Service](http://id.loc.gov/about/), and callers can look up more information about a term by dereferencing the URL `http://id.loc.gov/authorities/subjects/IDENTIFIER` where `IDENTIFIER` is the value of the `_id` in the LoCTerms database.  For instance, you can visit the page `http://id.loc.gov/authorities/subjects/sh89003287` in your web browser to find out more about `sh89003287`.
+
+Most of the fields in a LoCTerms entry are taken directly from the LCSH database, except for the field `topmost`.  That field is computed by following hypernyms from a given entry until terms are reached that have no values for `broader`.  The `topmost` field holds a list of the unique topmost hypernyms computing this way.  (Note that there may be more than one path from a given term to a topmost term, and thus for a given number of topmost terms N, running `query-locterms -t` may show more than N paths.)
 
 ☛ Installation and configuration
 --------------------------------
