@@ -72,7 +72,7 @@ _KEYRING_PATH = "org.casics.locterms"
 # Main body.
 # .............................................................................
 
-def main(describe=False, trace=False, user=None, password=None,
+def main(describe=False, trace=False, user=None, pswd=None,
          host=None, port=None, nocolor=False, nokeyring=False, *terms):
     '''Query LoCTerms for information about an LCSH term.  The LoCTerms
 database process must already be running.  The action to be performed must
@@ -109,25 +109,25 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         raise SystemExit(colorcode('No action specified. Use -h for help.', 'error'))
     if trace and describe:
         raise SystemExit(colorcode('Can only perform one action at a time.', 'error'))
-    if not user or not password:
+    if not user or not pswd:
         # If no user or password given, check keyring.
         #    If nothing found there, prompt the user.
         # If only user given, check keyring for password for that user
         #    If not found there, prompt the user.
         if not nokeyring:
-            (user, password) = get_keyring_credentials()
+            (user, pswd) = get_keyring_credentials()
         if not user:
             # Couldn't find it.  Ask the user.
             msg('No user credentials found or given.', 'warning')
-            (user, password) = ask_for_credentials()
-        if not user or not password:
+            (user, pswd) = ask_for_credentials()
+        if not user or not pswd:
             # We tried but failed to get user credentials.
             raise SystemExit(colorcode('Must provide a database user login and password.', 'error'))
         if not nokeyring:
             # Save the credentials.
             (u, p) = get_keyring_credentials()
-            if (not u and not p) or (u != user or p != password):
-                save_keyring_credentials(user, password)
+            if (not u and not p) or (u != user or p != pswd):
+                save_keyring_credentials(user, pswd)
     if not terms:
         raise SystemExit(colorcode('No LCSH terms given. Use -h for help.', 'error'))
     if not host:
@@ -147,7 +147,7 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         return
 
     # Connect to the LCSH database.
-    url = ('mongodb://' + user + ':' + password + '@' + host + ':' + str(port)
+    url = ('mongodb://' + user + ':' + pswd + '@' + host + ':' + str(port)
            + '/' + _DB_NAME + '?authSource=admin')
     db = MongoClient(url, tz_aware=True, serverSelectionTimeoutMS=_CONN_TIMEOUT)
     lcsh = db[_DB_NAME].terms
@@ -385,7 +385,7 @@ def port_occupied(host, port):
 main.__annotations__ = dict(
     describe  = ('print details about given LCSH term(s)',    'flag',   'd'),
     host      = ('database server host',                      'option', 'H'),
-    password  = ('database user password',                    'option', 'p'),
+    pswd      = ('database user password',                    'option', 'p'),
     port      = ('database connection port number',           'option', 'P'),
     user      = ('database user name',                        'option', 'u'),
     trace     = ('trace paths from given id to root term(s)', 'flag',   't'),
