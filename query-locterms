@@ -59,6 +59,9 @@ except:
 _CONN_TIMEOUT = 5000
 '''Time to wait for connection to database, in milliseconds.'''
 
+_DEFAULT_HOST = 'localhost'
+'''Default network host for LoCTerms server if no explicit host is given.'''
+
 _DEFAULT_PORT = 27017
 '''Default network port for MongoDB if no explicit port number is given.'''
 
@@ -82,58 +85,44 @@ be indicated by using one of the following two command line flags:
   -t    Trace the path from the given LCSH term(s) to root terms
 
 By default, this uses the operating system's keyring/keychain functionality
-to get the user name and password needed to access the LoCTerms database over
-the network.  If no such credentials are found, it will query the user
-interactively for the user name and password, and (unless the -X argument is
-given) then store them in the keyring/keychain so that it does not have to
-ask again in the future.  It is also possible to supply a user name and
-password directly using the -u and -p options, respectively, but this is
-discouraged because it is insecure on multiuser computer systems. (Other
-users could run "ps" in the background and see your credentials).
+to get the user name, password, port number and host name needed to access
+the LoCTerms database over the network.  If no such credentials are found, it
+will query the user interactively for the information, and (unless the -X
+argument is given) then store them in the user's keyring/keychain so that it
+does not have to ask again in the future.  It is also possible to supply the
+information directly on the command line using the -u, -p, -s and -o options
+but this is discouraged because it is insecure on multiuser computer
+systems. (Other users could run "ps" in the background and see your
+credentials).  The default for the host is "localhost" and the default port
+is whatever is configured in your instance of MongoDB.
 
-Additional arguments can be used to specify the host (-H) and port (-P) on
-which the database process is listening.  The default for the host is
-"localhost" and the default port is whatever is configured in your instance
-of MongoDB.
+If you ever need to change the information in the keyring/keychain, you can
+run this program again with the -X option, and it will ask you for the values
+and store them in the keyring again.
 
 Finally, the remaining arguments on the command line are assumed to be
 identifiers of terms in the Library of Congress Subject Headings (LCSH).
 '''
-    # Our default is to color output for easier reading, which means the
-    # command line flag makes more sense as a negated value (i.e., "nocolor").
-    # Dealing with a negated variable is confusing, so turn it around here.
+    # Our defaults are to do things like color the output, which means the
+    # command line flags make more sense as negated values (e.g., "nocolor").
+    # Dealing with negated variables is confusing, so turn them around here.
     colorize = 'termcolor' in sys.modules and not nocolor
+    keyring  = not nokeyring
 
     # Check arguments.
-    if not trace and not describe:
-        raise SystemExit(colorcode('No action specified. Use -h for help.', 'error'))
     if trace and describe:
         raise SystemExit(colorcode('Can only perform one action at a time.', 'error'))
-    if not user or not pswd:
-        # If no user or password given, check keyring.
-        #    If nothing found there, prompt the user.
-        # If only user given, check keyring for password for that user
-        #    If not found there, prompt the user.
-        if not nokeyring:
-            (user, pswd) = get_keyring_credentials()
-        if not user:
-            # Couldn't find it.  Ask the user.
-            msg('No user credentials found or given.', 'warning')
-            (user, pswd) = ask_for_credentials()
-        if not user or not pswd:
-            # We tried but failed to get user credentials.
-            raise SystemExit(colorcode('Must provide a database user login and password.', 'error'))
-        if not nokeyring:
-            # Save the credentials.
-            (u, p) = get_keyring_credentials()
-            if (not u and not p) or (u != user or p != pswd):
-                save_keyring_credentials(user, pswd)
+    if not user or not pswd or not host or not port:
+        (user, pswd, host, port) = obtain_credentials(user, pswd, host, port, keyring)
+    if keyring:
+        # Save the credentials if they're different from what's saved.
+        (s_user, s_pswd, s_host, s_port) = get_keyring_credentials()
+        if s_user != user or s_pswd != pswd or s_host != host or s_port != port:
+            save_keyring_credentials(user, pswd, host, port)
+    if not trace and not describe:
+        raise SystemExit(colorcode('No action specified. (Use -h for help)', 'warning'))
     if not terms:
-        raise SystemExit(colorcode('No LCSH terms given. Use -h for help.', 'error'))
-    if not host:
-        host = "localhost"
-    if not port:
-        port = _DEFAULT_PORT
+        raise SystemExit(colorcode('Need LCSH identifiers. (Use -h for help.)', 'error'))
 
     # Do some simple sanity checks:
     for t in terms:
@@ -147,8 +136,12 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         return
 
     # Connect to the LCSH database.
-    url = ('mongodb://' + user + ':' + pswd + '@' + host + ':' + str(port)
-           + '/' + _DB_NAME + '?authSource=admin')
+    url = 'mongodb://'
+    if user:
+        url = url + user
+    if pswd:
+        url = url + ':' + pswd
+    url += '@' + host + ':' + str(port) + '/' + _DB_NAME + '?authSource=admin'
     db = MongoClient(url, tz_aware=True, serverSelectionTimeoutMS=_CONN_TIMEOUT)
     lcsh = db[_DB_NAME].terms
 
@@ -157,7 +150,7 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     try:
         count = lcsh.count()
     except Exception as e:
-        raise SystemExit(colorcode('Failed to access database: {}'.format(e), 'error'))
+        raise SystemExit(colorcode('Unable to query database: {}'.format(e), 'error'))
 
     # Do the work.
     try:
@@ -331,35 +324,52 @@ def color_codes(flags):
 # Credentials/keyring functions
 # .............................................................................
 # Explanation about the weird way this is done: the Python keyring module
-# only offers a single function for setting a password associated with an
-# identifier.  However, we need to store both a user name and an identifier
-# and retrieve the user name when we don't know it yet.  So, the approach
-# here is to subvert the set_password() functionality to store the user name
-# under the fake user "username" and the password under the fake user
-# "password".
+# only offers a single function for setting a value; ostensibly, this is
+# intended to store a password associated with an identifier.  However, we
+# need to store several pieces of information, including a user name.  Since
+# we don't know the user name ahead of time, we can't use that as a key to
+# look up the credentials.  So, the approach here is to subvert the
+# set_password() functionality to store the user name under the fake user
+# "username", the password under the fake user "password", the host under the
+# fake user "host", etc.
 
 def get_keyring_credentials(user=None):
-    '''Look up user credentials for user 'user'.  If 'user' is None, gets
+    '''Lookss up user credentials for user 'user'.  If 'user' is None, gets
     the user name stored in the "username" field.'''
     if not user:
         user = keyring.get_password(_KEYRING_PATH, "username")
     password = keyring.get_password(_KEYRING_PATH, "password")
-    return (user, password)
+    host     = keyring.get_password(_KEYRING_PATH, "host")
+    port     = keyring.get_password(_KEYRING_PATH, "port")
+    return (user, password, host, port)
 
 
-def save_keyring_credentials(user, password):
-    '''Save the user and password info to the keyring.'''
+def save_keyring_credentials(user, password, host, port):
+    '''Saves the user, password, host and port info to the keyring.'''
     keyring.set_password(_KEYRING_PATH, "username", user)
     keyring.set_password(_KEYRING_PATH, "password", password)
+    keyring.set_password(_KEYRING_PATH, "host", host)
+    keyring.set_password(_KEYRING_PATH, "port", str(port))
     msg('Credentials for user "{}" saved to keyring'.format(user), 'info')
 
 
-def ask_for_credentials(user=None):
-    '''Ask the user for the password, and optionally also the user name.'''
+def obtain_credentials(user=None, pswd=None, host=None, port=None, keyring=True):
+    (s_user, s_pswd, s_host, s_port) = (None, None, None, None)
+    if keyring:
+        (s_user, s_pswd, s_host, s_port) = get_keyring_credentials()
+
+    if not host:
+        host = s_host or input("Database host (default: {}): ".format(_DEFAULT_HOST))
+        host = host or _DEFAULT_HOST
+    if not port:
+        port = s_port or input("Database port (default: {}): ".format(_DEFAULT_PORT))
+        port = port or _DEFAULT_PORT
     if not user:
-        user = input("User name: ")
-    password = getpass.getpass()
-    return (user, password)
+        user = s_user or input("User name: ")
+    if not pswd:
+        pswd = s_pswd or getpass.getpass()
+
+    return (user, pswd, host, port)
 
 
 # Miscellaneous utilities.
@@ -384,10 +394,10 @@ def port_occupied(host, port):
 
 main.__annotations__ = dict(
     describe  = ('print details about given LCSH term(s)',    'flag',   'd'),
-    host      = ('database server host',                      'option', 'H'),
-    pswd      = ('database user password',                    'option', 'p'),
-    port      = ('database connection port number',           'option', 'P'),
     user      = ('database user name',                        'option', 'u'),
+    pswd      = ('database user password',                    'option', 'p'),
+    host      = ('database server host',                      'option', 's'),
+    port      = ('database connection port number',           'option', 'o'),
     trace     = ('trace paths from given id to root term(s)', 'flag',   't'),
     nocolor   = ('do not color-code the output',              'flag',   'x'),
     nokeyring = ('do not use a keyring',                      'flag',   'X'),
