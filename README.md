@@ -180,6 +180,12 @@ LoCTerms database process is running with PID 10714.
 
 This procedure will leave the database running on your computer, so that you can immediately try `query-locterms` to experiment with the system.
 
+The database server (MongoDB) will be configured to listen on a default port, number 27017.  To change this, you can use the `-p` option when first configuring LoCTerms using `locterms-server`.  This port number will be saved to a configuration file in the current directory, so that when LoCTerms is restarted, it will automatically use the same port again.  Here is an example of setting the port number to `31313`&mdash;note that this is only an example and there is no reason to use this value in particular:
+
+```csh
+./locterms-server -p 31313 start
+```
+
 You can stop the database using the `stop` command, like this:
 
 ```csh
@@ -196,6 +202,7 @@ There are other options for `locterms-server`.  You can use the `-h` option to d
 
 ```csh
 ./locterms-server -h
+
 ```
 
 Note that database server process is **not automatically restarted** after you reboot your computer.  You can set up your computer to restart the process automatically, but the procedure for doing so depends on your computer's operating system.
