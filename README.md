@@ -79,41 +79,6 @@ sh99005029: Civilization
 
 To prevent security risks that would come from having unrestricted network access to the database, the database requires the use of a user name and password; these are set at the time of first creating installing and configuring LoCTerms database using `locterms-server` (described in the next section).  By default, `query-locterms` uses the operating system's keyring/keychain functionality to get the user name and password needed to access the LoCTerms database over the network so that you do not have to type them every time you call `query-locterms`.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.  It is also possible to supply a user name and password directly using the `-u` and `-p` options, respectively, but this is discouraged because it is insecure on multiuser computer systems. (Other users could run `ps` in the background and see your credentials).
 
-🗄 Database structure details
-----------------------------
-
-Each entry in the database (known as _documents_ in MongoDB parlance) is a structure with the following field-and-value pairs.  The value types are always either a string, a list of strings, an empty list, or the value `None`.
-
-```javascript
-{
-  "_id": "string",
-  "label": "string",
-  "alt_labels": [ "string", "string", ...],
-  "note": "string",
-  "broader": [ "id", "id", ...],
-  "narrower": [ "id", "id", ...],
-  "topmost": [ "id", "id", ...]
-}
-```
-
-A term in this database is indexed by its LCSH identifier; for example, `sh89003287`.  Identifiers in this scheme are strings that being with two letters followed by a series of integers.  The identifier is used as the value of the `_id` field.  (Note that in a slight deviation from common MongoDB practice, the `_id` field holds the identifier as a string, rather than an `ObjectId` object.  This makes using LoCTerms simpler.)
-
-The meanings of the fields are as follows:
-
-| Field        | Description | SKOS RDF component |
-|--------------|-------------|-------------------|
-| `_id`        | The term identifier | URI of the term in the LCSH Linked Data service |
-| `label`      | The preferred descriptive label for the term | `http://www.w3.org/2004/02/skos/core#prefLabel` |
-| `alt_labels` | One or more alternative descriptive labels | `http://www.w3.org/2004/02/skos/core#altLabel` |
-| `note`       | Notes (from LCSH) about the term | `http://www.w3.org/2004/02/skos/core#note` |
-| `broader`    | List of hypernyms of the term | `http://www.w3.org/2004/02/skos/core#broader` |
-| `narrower`   | List of hyponyms of the term | `http://www.w3.org/2004/02/skos/core#narrower` |
-| `topmost`    | List of topmost hyponyms of the term | (computed) |
-
-The Library of Congress runs a [Linked Data Service](http://id.loc.gov/about/), and callers can look up more information about a term by dereferencing the URL `http://id.loc.gov/authorities/subjects/IDENTIFIER` where `IDENTIFIER` is the value of the `_id` in the LoCTerms database.  For instance, you can visit the page `http://id.loc.gov/authorities/subjects/sh89003287` in your web browser to find out more about `sh89003287`.
-
-Most of the fields in a LoCTerms entry are taken directly from the LCSH database, except for the field `topmost`.  That field is computed by following hypernyms from a given entry until terms are reached that have no values for `broader`.  The `topmost` field holds a list of the unique topmost hypernyms computing this way.  (Note that there may be more than one path from a given term to a topmost term, and thus for a given number of topmost terms N, running `query-locterms -t` may show more than N paths.)
-
 ☛ Installation and configuration
 --------------------------------
 
@@ -206,6 +171,64 @@ There are other options for `locterms-server`.  You can use the `-h` option to d
 ```
 
 Note that database server process is **not automatically restarted** after you reboot your computer.  You can set up your computer to restart the process automatically, but the procedure for doing so depends on your computer's operating system.
+
+🗄 Database structure details
+----------------------------
+
+Each entry in the database (known as _documents_ in MongoDB parlance) is a structure with the following field-and-value pairs.  The value types are always either a string, a list of strings, an empty list, or the value `None`.
+
+```javascript
+{
+  "_id": "string",
+  "label": "string",
+  "alt_labels": [ "string", "string", ...],
+  "note": "string",
+  "broader": [ "id", "id", ...],
+  "narrower": [ "id", "id", ...],
+  "topmost": [ "id", "id", ...]
+}
+```
+
+A term in this database is indexed by its LCSH identifier; for example, `sh89003287`.  Identifiers in this scheme are strings that being with two letters followed by a series of integers.  The identifier is used as the value of the `_id` field.  (Note that in a slight deviation from common MongoDB practice, the `_id` field holds the identifier as a string, rather than an `ObjectId` object.  This makes using LoCTerms simpler.)
+
+The meanings of the fields are as follows:
+
+| Field        | Description | SKOS RDF component |
+|--------------|-------------|-------------------|
+| `_id`        | The term identifier | URI of the term in the LCSH Linked Data service |
+| `label`      | The preferred descriptive label for the term | `http://www.w3.org/2004/02/skos/core#prefLabel` |
+| `alt_labels` | One or more alternative descriptive labels | `http://www.w3.org/2004/02/skos/core#altLabel` |
+| `note`       | Notes (from LCSH) about the term | `http://www.w3.org/2004/02/skos/core#note` |
+| `broader`    | List of hypernyms of the term | `http://www.w3.org/2004/02/skos/core#broader` |
+| `narrower`   | List of hyponyms of the term | `http://www.w3.org/2004/02/skos/core#narrower` |
+| `topmost`    | List of topmost hyponyms of the term | (computed) |
+
+The Library of Congress runs a [Linked Data Service](http://id.loc.gov/about/), and callers can look up more information about a term by dereferencing the URL `http://id.loc.gov/authorities/subjects/IDENTIFIER` where `IDENTIFIER` is the value of the `_id` in the LoCTerms database.  For instance, you can visit the page `http://id.loc.gov/authorities/subjects/sh89003287` in your web browser to find out more about `sh89003287`.
+
+Most of the fields in a LoCTerms entry are taken directly from the LCSH database, except for the field `topmost`.  That field is computed by following hypernyms from a given entry until terms are reached that have no values for `broader`.  The `topmost` field holds a list of the unique topmost hypernyms computing this way.  (Note that there may be more than one path from a given term to a topmost term, and thus for a given number of topmost terms N, running `query-locterms -t` may show more than N paths.)
+
+⚙️ Database connection details
+----------------------------
+
+To connect applications to the database server (for example, using [MongoClient](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html) from [PyMongo](https://docs.mongodb.com/getting-started/python/client/)), you need to know (1) the user name, (2) password, (3) host running the MongoDB database server, (4) the number of the port on which the server is listening, (5) the name of the database (which is `lcsh-db`), and (6) the name of the collection within the database (which is `terms`).  Here is the form of the URI for use with MongoDB API libraries that accept connection strings in the [MongoDB URI](https://docs.mongodb.com/manual/reference/connection-string/) format:
+
+```python
+'mongodb://USER:PASSWORD@HOST:PORT/lcsh-db?authSource=admin'
+```
+
+where `USER` and `PASSWORD` are the values you used when first configuring the system using `locterms-server`, and `HOST` and `PORT` are the host and port number.  Once connected, access the database `lcsh-db` and collection `terms`.   Here is sample code in Python:
+
+```python
+db = MongoClient('mongodb://{}:{}@{}:{}/lcsh-db?authSource=admin'.format(user, password, host, port))
+lcsh_terms = db['lcsh-db'].terms
+```
+
+After executing the code above, you would be able to issue commands such as `find_one` to search for terms.
+
+```python
+entry = lcsh_terms.find_one( {'_id': 'sh95000713'} )
+```
+
 
 ⁇ Getting help and support
 --------------------------
