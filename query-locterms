@@ -120,7 +120,7 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         if s_user != user or s_pswd != pswd or s_host != host or s_port != port:
             save_keyring_credentials(user, pswd, host, port)
     if not trace and not describe:
-        raise SystemExit(colorcode('No action specified. (Use -h for help)', 'warning'))
+        raise SystemExit(colorcode('No action specified. (Use -h for help.)', 'warning'))
     if not terms:
         raise SystemExit(colorcode('Need LCSH identifiers. (Use -h for help.)', 'error'))
 
@@ -334,7 +334,7 @@ def color_codes(flags):
 # fake user "host", etc.
 
 def get_keyring_credentials(user=None):
-    '''Lookss up user credentials for user 'user'.  If 'user' is None, gets
+    '''Looks up user credentials for user 'user'.  If 'user' is None, gets
     the user name stored in the "username" field.'''
     if not user:
         user = keyring.get_password(_KEYRING_PATH, "username")
