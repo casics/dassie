@@ -7,7 +7,7 @@ SUMMARY
 This script parses a Library of Congress "LC Subject Headings (SKOS/RDF)" file
 and creates a MongoDB database collection containing the terms found in the
 file.  (The file can be downloaded from http://id.loc.gov/download/ and is
-named "authoritiessubjects.nt.skos".  The copy from 25 April 2016 is saved
+named "authoritiessubjects.nt.skos".  The copy from 19 May 2016 is saved
 in the subdirectory ../data in this repo.)
 
 The parts of the LCSH name authority file that are extracted by this program
@@ -108,7 +108,25 @@ db = MongoClient(tz_aware=True, connect=True)
 lcsh_db = db['lcsh']
 lcsh = lcsh_db.terms
 
-# Parse and build basic database.
+# Add metadata to record the original source.
+
+print('Adding general information to the database')
+try:
+    # FIXME currently this is hardwired because the file date info is not
+    # contained inside the authoritiessubjects file and I don't know how else
+    # to get it short of scraping the id.loc.gov/download/ page (which would
+    # be too time consuming to implement and fragile to future changes anyway).
+    lcsh_info = lcsh_db.info
+    lcsh_info.insert_one({'lcsh_source': 'http://id.loc.gov/static/data/authoritiessubjects.nt.skos.zip',
+                          'lcsh_file_date': '19 May 2016',
+                          # Record a version number in case we change the
+                          # database format in the future.
+                          'locterms_format': '1.0'})
+except Exception as err:
+    print(err)
+    import ipdb; ipdb.set_trace()
+
+# Parse and build basic terms database.
 #
 # Note: we need to make sure that all terms have an entry in the database
 # before we try to fill in values for the 'broader' and 'narrower' fields, so
