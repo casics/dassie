@@ -37,8 +37,10 @@ __version__ = '1.0.0'
 __author__  = 'Michael Hucka <mhucka@caltech.edu>'
 __email__   = 'mhucka@caltech.edu'
 __license__ = 'GPLv3'
+__website__ = 'https://github.com/casics/locterms'
 
 import getpass
+import humanize
 import keyring
 import sys
 import operator
@@ -75,7 +77,7 @@ _KEYRING_PATH = "org.casics.locterms"
 # Main body.
 # .............................................................................
 
-def main(describe=False, trace=False, user=None, pswd=None,
+def main(describe=False, trace=False, summarize=False, user=None, pswd=None,
          host=None, port=None, nocolor=False, nokeyring=False, *terms):
     '''Query LoCTerms for information about an LCSH term.  The LoCTerms
 database process must already be running.  The action to be performed must
@@ -83,6 +85,7 @@ be indicated by using one of the following two command line flags:
 
   -d    Describe the LCSH term(s) given on the command line
   -t    Trace the path from the given LCSH term(s) to root terms
+  -m    Print some summary statistics about the database of LCSH terms
 
 By default, this uses the operating system's keyring/keychain functionality
 to get the user name, password, port number and host name needed to access
@@ -110,7 +113,7 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     keyring  = not nokeyring
 
     # Check arguments.
-    if trace and describe:
+    if sum(x for x in [describe, trace, summarize]) > 1:
         raise SystemExit(colorcode('Can only perform one action at a time.', 'error'))
     if not user or not pswd or not host or not port:
         (user, pswd, host, port) = obtain_credentials(user, pswd, host, port, keyring)
@@ -119,9 +122,9 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         (s_user, s_pswd, s_host, s_port) = get_keyring_credentials()
         if s_user != user or s_pswd != pswd or s_host != host or s_port != port:
             save_keyring_credentials(user, pswd, host, port)
-    if not trace and not describe:
+    if not any([describe, trace, summarize]):
         raise SystemExit(colorcode('No action specified. (Use -h for help.)', 'warning'))
-    if not terms:
+    if not summarize and not terms:
         raise SystemExit(colorcode('Need LCSH identifiers. (Use -h for help.)', 'error'))
 
     # Do some simple sanity checks:
@@ -149,12 +152,15 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     # still be unable to actually do anything.  The next step acts as a test.
     try:
         count = lcsh.count()
+        import ipdb; ipdb.set_trace()
     except Exception as e:
         raise SystemExit(colorcode('Unable to query database: {}'.format(e), 'error'))
 
     # Do the work.
     try:
         msg('='*70, 'dark', colorize)
+        if summarize:
+            print_summary(lcsh, colorize)
         if trace:
             for t in terms:
                 trace_term(lcsh, t, colorize)
@@ -259,6 +265,12 @@ def print_details(entry, colorize=False):
         msg(prefix + text)
     else:
         msg('        note: (none)', 'dark', colorize)
+
+
+def print_summary(lcsh, colorize=False):
+    '''Print some statistics about the LoCTerms database.'''
+    count = lcsh.count()
+    msg('Number of LCSH terms in database: {}'.format(humanize.intcomma(count)))
 
 
 # Utilities for printing messages.
@@ -393,14 +405,15 @@ def port_occupied(host, port):
 # Plac automatically adds a -h argument for help, so no need to do it here.
 
 main.__annotations__ = dict(
-    describe  = ('print details about given LCSH term(s)',    'flag',   'd'),
-    user      = ('database user name',                        'option', 'u'),
-    pswd      = ('database user password',                    'option', 'p'),
-    host      = ('database server host',                      'option', 's'),
-    port      = ('database connection port number',           'option', 'o'),
-    trace     = ('trace paths from given id to root term(s)', 'flag',   't'),
-    nocolor   = ('do not color-code the output',              'flag',   'x'),
-    nokeyring = ('do not use a keyring',                      'flag',   'X'),
+    describe  = ('print details about given LCSH term(s)',      'flag',   'd'),
+    trace     = ('trace paths from given id to root term(s)',   'flag',   't'),
+    summarize = ('print summary statistics about the database', 'flag',   'm'),
+    user      = ('database user name',                          'option', 'u'),
+    pswd      = ('database user password',                      'option', 'p'),
+    host      = ('database server host',                        'option', 's'),
+    port      = ('database connection port number',             'option', 'o'),
+    nocolor   = ('do not color-code the output',                'flag',   'x'),
+    nokeyring = ('do not use a keyring',                        'flag',   'X'),
     terms     = 'one or more LCSH identifiers, like sh85118553',
 )
 

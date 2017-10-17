@@ -4,6 +4,7 @@
 # @brief   Start/stop/control the LoCTerms database server
 # @author  Michael Hucka <mhucka@caltech.edu>
 # @license Please see the file named LICENSE in the project directory
+# @website https://github.com/casics/locterms
 # =============================================================================
 #
 # This script makes use of fragments of code found on Stack Overflow.
