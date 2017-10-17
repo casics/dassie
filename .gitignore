@@ -66,8 +66,8 @@ TAGS
 # .............................................................................
 
 lcsh-db
-mongodb.log
-mongodb.log.*
+mongod.log
+mongod.log.*
 mongod.pid
 locterms.conf
 locterms.log.old
