@@ -1,0 +1,32 @@
+#!/bin/bash
+# =============================================================================
+# @file    start-empty-mongo
+# @brief   Start an empty MongoDB database
+# @author  Michael Hucka <mhucka@caltech.edu>
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/casics/locterms
+# =============================================================================
+#
+# This is a simple script to start mongod with an empty database and no
+# authentication, so that parse-lcsh-and-create-db.py can be used to create
+# a fresh LoCTerms database.
+
+dbpath="lcsh-db"
+log_file="mongod.log"
+pid_file=$(mktemp /tmp/mongod-pid.XXXXX)
+
+log_args="--logpath $log_file"
+db_args="--dbpath=$dbpath --directoryperdb"
+pid_args="--pidfilepath $pid_file"
+
+mkdir -p "$dbpath"
+ulimit -v unlimited
+
+echo "Starting insecure mongod for database in \"$dbpath\" ..."
+output=$(mongod $log_args $pid_args $db_args --bind_ip 127.0.0.1 --fork)
+if [[ -z $(echo $output | grep "ERROR") ]]; then
+    echo "... Done.  Watch the output in the log file \"$log_file\"."
+    echo "When finished, kill the mongod process using \"kill `cat $pid_file`\"."
+else
+    echo "Something went wrong. Check the log file \"$log_file\""
+fi
