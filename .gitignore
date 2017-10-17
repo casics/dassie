@@ -1,4 +1,11 @@
 # -*- mode: sh-mode; -*-
+# =============================================================================
+# @file    .gitignore
+# @brief   .gitignore file for LoCTerms
+# @author  Michael Hucka <mhucka@caltech.edu>
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/casics/locterms
+# =============================================================================
 
 # Compiled source
 # .............................................................................
@@ -64,4 +71,3 @@ mongodb.log.*
 mongod.pid
 locterms.conf
 locterms.log.old
-
