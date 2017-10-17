@@ -146,13 +146,14 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         url = url + ':' + pswd
     url += '@' + host + ':' + str(port) + '/' + _DB_NAME + '?authSource=admin'
     db = MongoClient(url, tz_aware=True, serverSelectionTimeoutMS=_CONN_TIMEOUT)
-    lcsh = db[_DB_NAME].terms
+    lcsh_db = db[_DB_NAME]
+    lcsh_terms = lcsh_db.terms
+    lcsh_info = lcsh_db.info
 
     # Watch out for the fact that with MongoDB, we may be able to connect yet
     # still be unable to actually do anything.  The next step acts as a test.
     try:
-        count = lcsh.count()
-        import ipdb; ipdb.set_trace()
+        count = lcsh_info.count()
     except Exception as e:
         raise SystemExit(colorcode('Unable to query database: {}'.format(e), 'error'))
 
@@ -160,50 +161,50 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
     try:
         msg('='*70, 'dark', colorize)
         if summarize:
-            print_summary(lcsh, colorize)
+            print_summary(lcsh_terms, lcsh_info, colorize)
         if trace:
             for t in terms:
-                trace_term(lcsh, t, colorize)
+                trace_term(lcsh_terms, t, colorize)
         if describe:
             for t in terms:
-                explain_term(lcsh, t, colorize)
+                explain_term(lcsh_terms, t, colorize)
                 msg('')
         msg('='*70, 'dark', colorize)
     except Exception as e:
         msg(colorcode(e, 'error'))
 
 
-def trace_term(lcsh, term, colorize):
+def trace_term(lcsh_terms, term, colorize):
     '''Trace a term's "broader" links until we can't go any further.'''
-    entry = lcsh.find_one({'_id': term})
+    entry = lcsh_terms.find_one({'_id': term})
     if not entry:
         msg('Could not find {} in the database'.format(term), 'error', colorize)
         return
-    print_paths(get_paths(lcsh, entry), colorize)
+    print_paths(get_paths(lcsh_terms, entry), colorize)
 
 
-def explain_term(lcsh, term, colorize):
+def explain_term(lcsh_terms, term, colorize):
     '''Print a description of one term.'''
-    entry = lcsh.find_one({'_id': term})
+    entry = lcsh_terms.find_one({'_id': term})
     if not entry:
         msg('Could not find {} in the database'.format(term), 'error', colorize)
         return
     print_details(entry, colorize)
 
 
-def get_paths(lcsh, entry):
+def get_paths(lcsh_terms, entry):
     '''Recursively follow "broader" term links, and return a list of results.'''
     paths = []
     if not entry['broader']:
         paths = [[entry]]
     else:
         for broader in entry['broader']:
-            parent = lcsh.find_one({'_id': broader})
+            parent = lcsh_terms.find_one({'_id': broader})
             if not parent:
                 raise SystemExit(colorcode('Broader term {} not found.'.format(broader),
                                            'error', colorize))
             if parent['broader']:
-                for path in get_paths(lcsh, parent):
+                for path in get_paths(lcsh_terms, parent):
                     paths.append([entry] + path)
             else:
                 paths.append([entry] + [parent])
@@ -267,10 +268,13 @@ def print_details(entry, colorize=False):
         msg('        note: (none)', 'dark', colorize)
 
 
-def print_summary(lcsh, colorize=False):
+def print_summary(lcsh_terms, lcsh_info, colorize=False):
     '''Print some statistics about the LoCTerms database.'''
-    count = lcsh.count()
+    info = lcsh_info.find_one({})
+    count = lcsh_terms.count()
     msg('Number of LCSH terms in database: {}'.format(humanize.intcomma(count)))
+    msg('Date of issue of LCSH terms: {}'.format(info['lcsh_file_date']))
+    msg('Source of LCSH terms: {}'.format(info['lcsh_source']))
 
 
 # Utilities for printing messages.
