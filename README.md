@@ -1,7 +1,7 @@
 LoCTerms
 ========
 
-<img align="right" src=".graphics/casics-logo-small.png">
+<img width="100px" align="right" src=".graphics/casics-logo-small.svg">
 
 LoCTerms implements a database of terms from the [Library of Congress Subject Headings](http://id.loc.gov/authorities/subjects.html) (LCSH) controlled vocabulary. Each term entry in the database has links to broader (hypernym) and narrower (hyponym) terms.  Applications can use [MongoDB](https://docs.mongodb.com/ecosystem/drivers/) network API calls to query the database for term relationships.
 
