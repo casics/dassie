@@ -24,7 +24,7 @@ The basic operation is simple: start the database process using `locterms-server
 `query-locterms` can perform two operations: print descriptive information about one or more LCSH terms, and trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms.  The following is an example of doing the first operation; this shows the output of using `query-locterms` to describe the term `sh85118400`:
 
 ```csh
-> ./query-locterms -d sh85118400
+# ./query-locterms -d sh85118400
 ======================================================================
 sh85118400:
          URL: http://id.loc.gov/authorities/subjects/sh85118400.html
@@ -40,7 +40,7 @@ sh85118400:
 And here is an example of output from using `query-locterms` to trace the term graph from `sh85118400` upward until it reaches the top-most LCSH terms.  This shows that the hypernym links from `sh85118400` end in 4 terms (`sh85008810`, `sh2002007885`, `sh85010480`, and `sh99005029`) that have no further hypernyms, and there are 5 paths that lead there from `sh85118400`:
 
 ```csh
-> ./query-locterms -t sh85118400
+# ./query-locterms -t sh85118400
 ======================================================================
 sh85008810: Associations, institutions, etc
 └─ sh85048306: Financial institutions
@@ -90,7 +90,7 @@ Before using LoCTerms, you will need to install the following software that LoCT
 
 On macOS, we use the [MacPorts](https://www.macports.org) packages [mongodb](https://www.macports.org/ports.php?by=name&substr=mongodb), [mongo-tools](https://www.macports.org/ports.php?by=name&substr=mongo-tools) and [py-pymongo](https://www.macports.org/ports.php?by=name&substr=py-pymongo) to install the dependencies above.  We use Python to implement the short programs in this repository, but the database served by LoCTerms is not dependent on Python and you can use any [MongoDB API library](https://docs.mongodb.com/ecosystem/drivers/) to interact with it once it is installed and running.
 
-The next step after installing the dependencies above is to start a shell terminal in the directory where you installed LoCTerms.  First, choose a user login and password that you want to use for network access to the database.  Next, in a terminal shell with the LoCTerms directory as the current working directory, execute the program `locterms-server` with the argument `start`:
+The next step after installing the dependencies above is to start a shell terminal in the [locterms](locterms) subdirectory.  First, choose a user login and password that you want to use for network access to the database.  Next, in a terminal shell with the LoCTerms directory as the current working directory, execute the program `locterms-server` with the argument `start`:
 
 ```csh
 ./locterms-server start
