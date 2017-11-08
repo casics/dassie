@@ -1,36 +1,13 @@
 #!/usr/bin/env python3
 '''
-query-locterms: interactively print information about an LCSH term.
+query_locterms: interactively print information about an LCSH term.
 
-Basic usage:
-    query-locterms -d IDENTIFIER [IDENTIFIER ...]
-or
-    query-locterms -t IDENTIFIER [IDENTIFIER ...]
-
-The LoCTerms database process must already be running.  The action to be
-performed must be indicated by using one of the following two command
-line flags:
-
-  -d    Describe the LCSH term(s) given on the command line
-  -t    Trace the path from the given LCSH term(s) to root terms
-
-By default, this uses the operating system's keyring/keychain functionality
-to get the user name and password needed to access the LoCTerms database over
-the network.  If no such credentials are found, it will query the user
-interactively for the user name and password, and then store them in the
-keyring/keychain unless the -X argument is given so that it does not have to
-ask again in the future.  It is also possible to supply a user name and
-password directly using the -u and -p options, respectively, but this is
-discouraged because it is insecure on multiuser computer systems. (Other
-users could run "ps" in the background and see your credentials).
-
-Additional arguments can be used to specify the host (-H) and port (-P) on
-which the database process is listening.  The default for the host is
-"localhost" and the default port is whatever is configured in your instance
-of MongoDB.
-
-Finally, the remaining arguments on the command line are assumed to be
-identifiers of terms in the Library of Congress Subject Headings (LCSH).
+This module allows a user to contact the LoCTerms database and query it to
+get information about Library of Congress Subject Heading terms.  The
+LoCTerms database process must already be running.  The action to be
+performed must be indicated by using one of the command line flags.
+Please see the definition of main() for more information about the 
+available commands.
 '''
 
 import getpass
