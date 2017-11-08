@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+'''
+locterms: command line interface to query the LoCTerms database server
+
+This is a user interface for interacting with the LoCTerms database via
+its MongoDB network interface.  Please use the -h command line option to
+get a summary of how to use it and the options available.
+'''
+
+# Allow this program to be executed directly from the 'bin' directory.
+import sys
+sys.path.append('..')
+
+# Hand over to the command line interface.
+from locterms import *
+plac.call(main)
