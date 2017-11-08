@@ -9,5 +9,5 @@
 # Inventory Creation System.  For more information, visit http://casics.org.
 # ------------------------------------------------------------------------- -->
 
-from .query-locterms import *
+from .query_locterms import *
 from .version import *
