@@ -33,12 +33,6 @@ Finally, the remaining arguments on the command line are assumed to be
 identifiers of terms in the Library of Congress Subject Headings (LCSH).
 '''
 
-__version__ = '1.0.0'
-__author__  = 'Michael Hucka <mhucka@caltech.edu>'
-__email__   = 'mhucka@caltech.edu'
-__license__ = 'GPLv3'
-__website__ = 'https://github.com/casics/locterms'
-
 import getpass
 import humanize
 import keyring
@@ -76,6 +70,20 @@ _KEYRING_PATH = "org.casics.locterms"
 
 # Main body.
 # .............................................................................
+
+# Plac automatically adds a -h argument for help, so no need to do it here.
+@plac.annotations(
+    describe  = ('print details about given LCSH term(s)',      'flag',   'd'),
+    trace     = ('trace paths from given id to root term(s)',   'flag',   't'),
+    summarize = ('print summary statistics about the database', 'flag',   'm'),
+    user      = ('database user name',                          'option', 'u'),
+    pswd      = ('database user password',                      'option', 'p'),
+    host      = ('database server host',                        'option', 's'),
+    port      = ('database connection port number',             'option', 'o'),
+    nocolor   = ('do not color-code the output',                'flag',   'x'),
+    nokeyring = ('do not use a keyring',                        'flag',   'X'),
+    terms     = 'one or more LCSH identifiers, like sh85118553',
+)
 
 def main(describe=False, trace=False, summarize=False, user=None, pswd=None,
          host=None, port=None, nocolor=False, nokeyring=False, *terms):
@@ -401,31 +409,6 @@ def port_occupied(host, port):
         return (e.errno in [48, 98])
     finally:
         sock.close()
-
-
-# Plac annotations for main function arguments
-# .............................................................................
-# Argument annotations are: (help, kind, abbrev, type, choices, metavar)
-# Plac automatically adds a -h argument for help, so no need to do it here.
-
-main.__annotations__ = dict(
-    describe  = ('print details about given LCSH term(s)',      'flag',   'd'),
-    trace     = ('trace paths from given id to root term(s)',   'flag',   't'),
-    summarize = ('print summary statistics about the database', 'flag',   'm'),
-    user      = ('database user name',                          'option', 'u'),
-    pswd      = ('database user password',                      'option', 'p'),
-    host      = ('database server host',                        'option', 's'),
-    port      = ('database connection port number',             'option', 'o'),
-    nocolor   = ('do not color-code the output',                'flag',   'x'),
-    nokeyring = ('do not use a keyring',                        'flag',   'X'),
-    terms     = 'one or more LCSH identifiers, like sh85118553',
-)
-
-
-# Entry point
-# .............................................................................
-
-plac.call(main)
 
 
 # For Emacs users
