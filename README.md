@@ -12,19 +12,20 @@ LoCTerms implements a database of terms from the [Library of Congress Subject He
 ☀ Introduction
 -----------------------------
 
-In [CASICS](https://github.com/casics), we annotate GitHub repository entries with terms from the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  To do this, we developed a simple hierarchical browser for LCSH terms to allow search and navigation in the term hierarchy. To support this functionality, we converted a copy of the LCSH terms into a database that makes explicit the ["is-a"](https://en.wikipedia.org/wiki/Hyponymy_and_hypernymy) relationships between LCSH terms.  The database we use is [MongoDB](https://mongodb.com).  The result, LoCTerms (short for "Library of Congress Terms"), is a system that allows programs to make normal MongoDB network API calls from any programming language.
+In [CASICS](https://github.com/casics), we annotate GitHub repository entries with terms from the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  To do this, we developed a simple annotation interface that includes a hierarchical browser for LCSH terms, to allow search and navigation in the term hierarchy. To support this annotation interface, we converted a copy of the LCSH terms into a database that makes explicit the ["is-a"](https://en.wikipedia.org/wiki/Hyponymy_and_hypernymy) relationships between LCSH terms.  The database we use is [MongoDB](https://mongodb.com).  The result, LoCTerms (short for _"Library of Congress Terms"_), is a system that allows programs to use normal MongoDB network API calls to search for LCSH terms and their relationships.
 
 ▶︎ Basic operation
 ------------------
 
-LoCTerms includes a program, `locterms-server` to load and run a MongoDB database containing the LCSH term data, and a command-line application, `query-locterms`, that can be used to explore the database interactively. The latter also serves as an example of how to write a Python client program that accesses the database over the network&mdash;the same could be implemented using any of the different [MongoDB drivers available](https://docs.mongodb.com/ecosystem/drivers/).
+LoCTerms includes a program, `locterms-server` to load and run a MongoDB database containing the LCSH term data, and a command-line application, `locterms`, that can be used to explore the database interactively. The latter also serves as an example of how to write a Python client program that accesses the database over the network&mdash;the same could be implemented using any of the different [MongoDB drivers available](https://docs.mongodb.com/ecosystem/drivers/).  The `locterms` subdirectory in this repository contains `locterms-server` and the `bin` subdirectory contains `locterms`.
 
-The basic operation is simple: start the database process using `locterms-server start`, and then connect to the database to perform queries and obtain data.  The operation of `locterms-server` is described in the next section below.
+The basic operation is simple: cd into the `locterms` subdirectory, start the database process using `locterms-server start`, and then connect to the database to perform queries and obtain data.  The operation of `locterms-server` is described in the next section below.
 
-`query-locterms` can perform two operations: print descriptive information about one or more LCSH terms, and trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms.  The following is an example of doing the first operation; this shows the output of using `query-locterms` to describe the term `sh85118400`:
+The `locterms` command line interface (in the `bin` subdirectory) can perform three operations: print descriptive information about one or more LCSH terms, trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms, and print some summary statistics about the database.  The following is an example of doing the first operation; this shows the output of using `locterms` to describe the term `sh85118400`:
 
 ```csh
-# ./query-locterms -d sh85118400
+# cd bin
+# ./locterms -d sh85118400
 ======================================================================
 sh85118400:
          URL: http://id.loc.gov/authorities/subjects/sh85118400.html
@@ -37,10 +38,10 @@ sh85118400:
 ======================================================================
 ```
 
-And here is an example of output from using `query-locterms` to trace the term graph from `sh85118400` upward until it reaches the top-most LCSH terms.  This shows that the hypernym links from `sh85118400` end in 4 terms (`sh85008810`, `sh2002007885`, `sh85010480`, and `sh99005029`) that have no further hypernyms, and there are 5 paths that lead there from `sh85118400`:
+And here is an example of output from using `locterms` to trace the term graph from `sh85118400` upward until it reaches the top-most LCSH terms.  This shows that the hypernym links from `sh85118400` end in 4 terms (`sh85008810`, `sh2002007885`, `sh85010480`, and `sh99005029`) that have no further hypernyms, and there are 5 paths that lead there from `sh85118400`:
 
 ```csh
-# ./query-locterms -t sh85118400
+# ./locterms -t sh85118400
 ======================================================================
 sh85008810: Associations, institutions, etc
 └─ sh85048306: Financial institutions
@@ -77,7 +78,7 @@ sh99005029: Civilization
                └─ sh85118400: School savings banks
 ```
 
-To prevent security risks that would come from having unrestricted network access to the database, the database requires the use of a user name and password; these are set at the time of first creating installing and configuring LoCTerms database using `locterms-server` (described in the next section).  By default, `query-locterms` uses the operating system's keyring/keychain functionality to get the user name and password needed to access the LoCTerms database over the network so that you do not have to type them every time you call `query-locterms`.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.  It is also possible to supply a user name and password directly using the `-u` and `-p` options, respectively, but this is discouraged because it is insecure on multiuser computer systems. (Other users could run `ps` in the background and see your credentials).
+To prevent security risks that would come from having unrestricted network access to the database, the database requires the use of a user name and password; these are set at the time of first creating installing and configuring LoCTerms database using `locterms-server` (described in the next section).  By default, `locterms` uses the operating system's keyring/keychain functionality to get the user name and password needed to access the LoCTerms database over the network so that you do not have to type them every time you call `locterms`.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.  It is also possible to supply a user name and password directly using the `-u` and `-p` options, respectively, but this is discouraged because it is insecure on multiuser computer systems. (Other users could run `ps` in the background and see your credentials).
 
 ☛ Installation and configuration
 --------------------------------
@@ -93,6 +94,7 @@ On macOS, we use the [MacPorts](https://www.macports.org) packages [mongodb](htt
 The next step after installing the dependencies above is to start a shell terminal in the [locterms](locterms) subdirectory.  First, choose a user login and password that you want to use for network access to the database.  Next, in a terminal shell with the LoCTerms directory as the current working directory, execute the program `locterms-server` with the argument `start`:
 
 ```csh
+cd locterms
 ./locterms-server start
 ```
 
@@ -143,7 +145,7 @@ Cleaning up.
 LoCTerms database process is running with PID 10714.
 ```
 
-This procedure will leave the database running on your computer, so that you can immediately try `query-locterms` to experiment with the system.
+This procedure will leave the database running on your computer, so that you can immediately try `locterms` to experiment with the system.
 
 The database server (MongoDB) will be configured to listen on a default port, number 27017.  To change this, you can use the `-p` option when first configuring LoCTerms using `locterms-server`.  This port number will be saved to a configuration file in the current directory, so that when LoCTerms is restarted, it will automatically use the same port again.  Here is an example of setting the port number to `31313`&mdash;note that this is only an example and there is no reason to use this value in particular:
 
@@ -205,7 +207,7 @@ The meanings of the fields are as follows:
 
 The Library of Congress runs a [Linked Data Service](http://id.loc.gov/about/), and callers can look up more information about a term by dereferencing the URL `http://id.loc.gov/authorities/subjects/IDENTIFIER` where `IDENTIFIER` is the value of the `_id` in the LoCTerms database.  For instance, you can visit the page `http://id.loc.gov/authorities/subjects/sh89003287` in your web browser to find out more about `sh89003287`.
 
-Most of the fields in a LoCTerms entry are taken directly from the LCSH database, except for the field `topmost`.  That field is computed by following hypernyms from a given entry until terms are reached that have no values for `broader`.  The `topmost` field holds a list of the unique topmost hypernyms computing this way.  (Note that there may be more than one path from a given term to a topmost term, and thus for a given number of topmost terms N, running `query-locterms -t` may show more than N paths.)
+Most of the fields in a LoCTerms entry are taken directly from the LCSH database, except for the field `topmost`.  That field is computed by following hypernyms from a given entry until terms are reached that have no values for `broader`.  The `topmost` field holds a list of the unique topmost hypernyms computing this way.  (Note that there may be more than one path from a given term to a topmost term, and thus for a given number of topmost terms N, running `locterms -t` may show more than N paths.)
 
 ⚙️ Database connection details
 ----------------------------
