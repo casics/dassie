@@ -1,13 +1,10 @@
-#
+# =============================================================================
 # @file    version.py
 # @brief   CASICS LoCTerms version info
-# @author  Michael Hucka
-#
-# <!---------------------------------------------------------------------------
-# Copyright (C) 2015 by the California Institute of Technology.
-# This software is part of CASICS, the Comprehensive and Automated Software
-# Inventory Creation System.  For more information, visit http://casics.org.
-# ------------------------------------------------------------------------- -->
+# @author  Michael Hucka <mhucka@caltech.edu>
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/casics/locterms
+# =============================================================================
 
 __version__   = '1.0.0'
 __title__     = 'LoCTerms'

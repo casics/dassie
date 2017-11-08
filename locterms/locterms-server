@@ -5,11 +5,11 @@
 # @author  Michael Hucka <mhucka@caltech.edu>
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/casics/locterms
-# =============================================================================
 #
 # This script makes use of fragments of code found on Stack Overflow.
 # Code contributed to Stack Overflow is licensed CC-BY-SA 3.0.
 # https://creativecommons.org/licenses/by-sa/3.0/
+# =============================================================================
 
 version_number="1.0.0"
 website="https://github.com/casics/locterms"

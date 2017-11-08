@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-'''
-locterms: command line interface to query the LoCTerms database server
-
-This is a user interface for interacting with the LoCTerms database via
-its MongoDB network interface.  Please use the -h command line option to
-get a summary of how to use it and the options available.
-'''
+# =============================================================================
+# @file    locterms
+# @brief   Command line interface to query the LoCTerms database server
+# @author  Michael Hucka <mhucka@caltech.edu>
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/casics/locterms
+#
+# This is a user interface for interacting with the LoCTerms database via its
+# MongoDB network interface.  Please use the -h command line option to get a
+# summary of how to use it and the options available.
+# =============================================================================
 
 # Allow this program to be executed directly from the 'bin' directory.
 import sys
