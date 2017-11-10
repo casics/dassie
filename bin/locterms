@@ -12,8 +12,9 @@
 # =============================================================================
 
 # Allow this program to be executed directly from the 'bin' directory.
+import os
 import sys
-sys.path.append('..')
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 # Hand over to the command line interface.
 from locterms import *
