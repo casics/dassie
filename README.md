@@ -21,7 +21,7 @@ LoCTerms includes a program, `locterms-server` to load and run a MongoDB databas
 
 The basic operation is simple: cd into the `locterms` subdirectory, start the database process using `locterms-server start`, and then connect to the database to perform queries and obtain data.  The operation of `locterms-server` is described in the next section below.
 
-The `locterms` command line interface (in the `bin` subdirectory) can perform three operations: print descriptive information about one or more LCSH terms, trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms, and print some summary statistics about the database.  The following is an example of doing the first operation; this shows the output of using `locterms` to describe the term `sh85118400`:
+The `locterms` command line interface (in the `bin` subdirectory) can perform four operations: print descriptive information about one or more LCSH terms, trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms, search for terms whose labels or notes contain a given string or regular exprssion, and print some summary statistics about the database.  The following is an example of doing the first operation; this shows the output of using `locterms` to describe the term `sh85118400`:
 
 ```csh
 # cd bin
@@ -34,6 +34,42 @@ sh85118400:
     narrower:
      broader: sh85117760
      topmost: sh99005029, sh85010480, sh2002007885, sh85008810
+        note: (none)
+======================================================================
+```
+
+Here is an example of searching for terms using a regular expression.  The regular expression syntax used is [the one supported by Python's `re` module](https://docs.python.org/3/howto/regex.html):
+
+```csh
+# cd bin
+# ./locterms -f 'biolog.*simulat.*'
+======================================================================
+Found 3 entries containing "biolog.*simulat.*" in label, alt_label, or notes
+sh2009117081
+         URL: http://id.loc.gov/authorities/subjects/sh2009117081.html
+       label: Biological systems--Simulation methods--Congresses
+  alt labels: (none)
+    narrower: (none)
+     broader: (none)
+     topmost: (none)
+        note: (none)
+----------------------------------------------------------------------
+sh2009117080
+         URL: http://id.loc.gov/authorities/subjects/sh2009117080.html
+       label: Biological systems--Computer simulation--Congresses
+  alt labels: (none)
+    narrower: (none)
+     broader: (none)
+     topmost: (none)
+        note: (none)
+----------------------------------------------------------------------
+sh93000478
+         URL: http://id.loc.gov/authorities/subjects/sh93000478.html
+       label: Life (Biology)--Simulation games
+  alt labels: (none)
+    narrower: (none)
+     broader: (none)
+     topmost: (none)
         note: (none)
 ======================================================================
 ```
