@@ -19,6 +19,7 @@ import os
 import plac
 import pprint
 from   pymongo import MongoClient
+import re
 import socket
 try:
     from termcolor import colored
@@ -51,6 +52,7 @@ _KEYRING = "org.casics.locterms"
 # Plac automatically adds a -h argument for help, so no need to do it here.
 @plac.annotations(
     describe  = ('print details about given LCSH term(s)',      'flag',   'd'),
+    find      = ('find LCSH terms containing the given regex',  'flag',   'f'),
     trace     = ('trace paths from given id to root term(s)',   'flag',   't'),
     summarize = ('print summary statistics about the database', 'flag',   'm'),
     user      = ('database user name',                          'option', 'u'),
@@ -59,16 +61,18 @@ _KEYRING = "org.casics.locterms"
     port      = ('database connection port number',             'option', 'o'),
     nocolor   = ('do not color-code the output',                'flag',   'x'),
     nokeyring = ('do not use a keyring',                        'flag',   'X'),
-    terms     = 'one or more LCSH identifiers, like sh85118553',
+    args      = 'a string or regex to search for, or one or more LCSH identifiers',
 )
 
-def main(describe=False, trace=False, summarize=False, user=None, pswd=None,
-         host=None, port=None, nocolor=False, nokeyring=False, *terms):
+def main(describe=False, find=False, trace=False, summarize=False,
+         user=None, pswd=None, host=None, port=None,
+         nocolor=False, nokeyring=False, *args):
     '''Query LoCTerms for information about an LCSH term.  The LoCTerms
 database process must already be running.  The action to be performed must
 be indicated by using one of the following two command line flags:
 
   -d    Describe the LCSH term(s) given on the command line
+  -f    Search the label, alt_label and note fields for a string or regex
   -t    Trace the path from the given LCSH term(s) to root terms
   -m    Print some summary statistics about the database of LCSH terms
 
@@ -88,8 +92,17 @@ If you ever need to change the information in the keyring/keychain, you can
 run this program again with the -X option, and it will ask you for the values
 and store them in the keyring again.
 
-Finally, the remaining arguments on the command line are assumed to be
-identifiers of terms in the Library of Congress Subject Headings (LCSH).
+The -f option uses Python regular expression syntax.  An explanation of the
+syntax can be found here: https://docs.python.org/3/howto/regex.html
+Note that it is best to quote the string given to -f in order to avoid the
+string being evaluated by your command shell interpreter.
+
+The -x option (do not color the output) is useful when piping the output to
+a pagination program like "more" or "less".
+
+The commands that take identifiers (-d and -t) assume that the remaining
+arguments on the command line are identifiers of terms in the Library of
+Congress Subject Headings (LCSH).
 '''
     # Our defaults are to do things like color the output, which means the
     # command line flags make more sense as negated values (e.g., "nocolor").
@@ -109,17 +122,18 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         (s_user, s_pswd, s_host, s_port) = get_credentials(_KEYRING)
         if s_user != user or s_pswd != pswd or s_host != host or s_port != port:
             save_credentials(_KEYRING, user, pswd, host, port)
-    if not any([describe, trace, summarize]):
+    if not any([describe, find, trace, summarize]):
         raise SystemExit(colorcode('No action specified. (Use -h for help.)', 'warning'))
-    if not summarize and not terms:
+    if not find and (not summarize and not args):
         raise SystemExit(colorcode('Need LCSH identifiers. (Use -h for help.)', 'error'))
 
     # Do some simple sanity checks:
-    for t in terms:
-        if not t.startswith('sh'):
-            msg('Identifiers must be LCSH identifiers, like sh89003287',
-                'error', colorize)
-            return
+    if not find:
+        for t in args:
+            if not t.startswith('sh'):
+                msg('Identifiers must be LCSH identifiers, like sh89003287',
+                    'error', colorize)
+                return
     if not port_occupied(host, int(port)):
         msg('Cannot connect to port {} -- is the database running?'.format(port),
             'error', colorize)
@@ -150,10 +164,12 @@ identifiers of terms in the Library of Congress Subject Headings (LCSH).
         if summarize:
             print_summary(lcsh_terms, lcsh_info, colorize)
         if trace:
-            for t in terms:
+            for t in args:
                 trace_term(lcsh_terms, t, colorize)
+        if find:
+            find_terms(lcsh_terms, args[0], colorize)
         if describe:
-            for t in terms:
+            for t in args:
                 explain_term(lcsh_terms, t, colorize)
                 msg('')
         msg('='*70, 'dark', colorize)
@@ -224,7 +240,7 @@ def print_one(term, indent='', colorize=False):
 def print_details(entry, colorize=False):
     '''Print details about a single term.'''
     label = entry['label'] if entry['label'] else '(no label)'
-    msg(colorcode(entry['_id'], 'bold', colorize) + ':')
+    msg(colorcode(entry['_id'], ['bold', 'reverse'], colorize))
     msg(colorcode('         URL: ', 'dark', colorize) +
         'http://id.loc.gov/authorities/subjects/' + entry['_id'] + '.html')
     msg(colorcode('       label: ', 'dark', colorize) + label)
@@ -262,6 +278,23 @@ def print_summary(lcsh_terms, lcsh_info, colorize=False):
     msg('Number of LCSH terms in database: {}'.format(humanize.intcomma(count)))
     msg('Date of issue of LCSH terms: {}'.format(info['lcsh_file_date']))
     msg('Source of LCSH terms: {}'.format(info['lcsh_source']))
+
+
+def find_terms(lcsh_terms, text, colorize=False):
+    expr = re.compile(text, re.IGNORECASE)
+    entries = lcsh_terms.find({'$or': [{'label': expr},
+                                       {'alt_label': expr},
+                                       {'note': expr}]})
+    if entries.count() > 0:
+        msg('Found {} entries containing "{}" in label, alt_label, or notes'
+            .format(entries.count(), text))
+        stop_index = entries.count() - 1
+        for index, entry in enumerate(entries):
+            print_details(entry, colorize=colorize)
+            if index < stop_index:
+                msg('-'*70, 'dark', colorize)
+    else:
+        msg('Found no LCSH entries containing "{}".'.format(text))
 
 
 # Utilities for printing messages.
