@@ -6,5 +6,5 @@
 # @website https://github.com/casics/locterms
 # =============================================================================
 
+from .__version__ import *
 from .query_locterms import *
-from .version import *
