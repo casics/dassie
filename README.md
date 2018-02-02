@@ -16,29 +16,131 @@ Dassie implements a database of the subject term hierarchies found in the [Libra
 
 Dassie was developed to solve a simple need: to provide a fast way to search and browse the terms in the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  We converted the essential parts of the LCSH linked data graph into a database that makes explicit the ["is-a"](https://en.wikipedia.org/wiki/Hyponymy_and_hypernymy) relationships between LCSH terms.  The database we use is [MongoDB](https://mongodb.com).  The result, Dassie (a loose acronym for _"<b>da</b>tabase of <b>s</b>ubject term<b>s</b> and hierarch<b>ie</b>s"_), is a system that allows programs to use normal MongoDB network API calls to search for LCSH terms and their relationships.
 
-▶︎ Basic operation
-------------------
-
-Dassie includes a program, `dassie-server` to load and run a MongoDB database containing the LCSH term data, and a command-line application, `dassie`, that can be used to explore the database interactively. The latter also serves as an example of how to write a Python client program that accesses the database over the network&mdash;the same could be implemented using any of the different [MongoDB drivers available](https://docs.mongodb.com/ecosystem/drivers/).  The `dassie` subdirectory in this repository contains `dassie-server` and the `bin` subdirectory contains `dassie`.
-
-The basic operation is simple: cd into the `dassie` subdirectory, start the database process using `dassie-server start`, and then connect to the database to perform queries and obtain data.  The operation of `dassie-server` is described in the next section below.
-
-The `dassie` command line interface (in the `bin` subdirectory) can perform four operations: print descriptive information about one or more LCSH terms, trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms, search for terms whose labels or notes contain a given string or regular exprssion, and print some summary statistics about the database.  The following is an example of doing the first operation; this shows the output of using `dassie` to describe the term `sh85118400`:
+Here is an example of using the `dassie` example program to describe the term `sh2008002926`:
 
 ```csh
-# cd bin
-# ./dassie -d sh85118400
+# dassie -d sh2008002926
 ======================================================================
-sh85118400:
-         URL: http://id.loc.gov/authorities/subjects/sh85118400.html
-       label: School savings banks
+sh2008002926
+         URL: http://id.loc.gov/authorities/subjects/sh2008002926.html
+       label: Systems biology
   alt labels: (none)
-    narrower:
-     broader: sh85117760
-     topmost: sh99005029, sh85010480, sh2002007885, sh85008810
+    narrower: (none)
+     broader: sh2003008355
+     topmost: sh00007934, sh85118553
         note: (none)
 ======================================================================
 ```
+
+We used Python 3 to implement `dassie` as an example, but the database served by Dassie does not depend on Python and you can use any [MongoDB API library](https://docs.mongodb.com/ecosystem/drivers/) to interact with Dassie once it is installed and running.
+
+✺ Installing and configuring Dassie
+----------------------------------
+
+Here follow detailed instructions for getting Dassie running on a computer.
+
+### ⓵&nbsp;&nbsp; _Download Dassie_
+You can either download the release archive, or clone the repository directly:
+
+```
+git clone https://github.com/casics/dassie.git
+```
+
+### ⓶&nbsp;&nbsp; _Install software that Dassie depends upon_
+
+Dassie needs the following software to run.  (On macOS, we use the [MacPorts](https://www.macports.org) packages [mongodb](https://www.macports.org/ports.php?by=name&substr=mongodb), [mongo-tools](https://www.macports.org/ports.php?by=name&substr=mongo-tools) and [py-pymongo](https://www.macports.org/ports.php?by=name&substr=py-pymongo) to install the dependencies.)
+
+* [MongoDB](https://www.mongodb.com) version 3.4 or later
+* (If using [MacPorts](https://www.macports.org) on macOS) [mongo-tools](https://www.macports.org/ports.php?by=name&substr=mongo-tools)
+* [PyMongo](https://api.mongodb.com/python/current/) for Python 3 (to use the short Python programs provided here)
+
+### ⓷&nbsp;&nbsp; _Configure the server process_
+
+First, choose a user login and password that you want to use for network access to the database.  Next, start a terminal shell and cd into the [dassie](dassie) subdirectory and run the program `dassie-server` with the argument `start`:
+
+```csh
+cd dassie
+./dassie-server start
+```
+
+The first time `dassie-server` is executed, it will (1) prompt you for the user name and password and configure the MongoDB database to allow only those credentials to read the database over the network, and (2) load the database contents from a compressed database dump.  This will take extra time but only needs to be done once.  The output should look something like the following:
+
+```txt
+No database found in 'lcsh-db'.
+Will begin by setting up database.
+Creating local database directory lcsh-db.
+Moving old log file to '/Users/mhucka/repos/casics-dassie/dassie.log.old'
+Please provide a user name: 
+Please provide a password:
+Please type the password again:
+Please record the user name & password in a safe location.
+Extracting database dump from 'data/lcsh-dump.tgz'.
+Database process will be forked and run in the background.
+Starting unconfigured database process.
+about to fork child process, waiting until server is ready for connections.
+forked process: 10606
+child process started successfully, parent exiting
+Loading dump into running database instance. Note: this step
+ will take time and print a lot of messages. If it succeeds,
+ it will print 'finished restoring lcsh-db.terms' near the end.
+
+2017-09-21T10:38:07.332-0700    using write concern: w='1', j=false, fsync=false, wtimeout=0
+2017-09-21T10:38:07.332-0700    the --db and --collection args should only be used when restoring from a BSON file. Other uses are deprecated and will not exist in the future; use --nsInclude instead
+2017-09-21T10:38:07.333-0700    building a list of collections to restore from dump/lcsh dir
+2017-09-21T10:38:07.333-0700    found collection lcsh-db.terms bson to restore to lcsh-db.terms
+2017-09-21T10:38:07.333-0700    found collection metadata from lcsh-db.terms to restore to lcsh-db.terms
+2017-09-21T10:38:07.333-0700    reading metadata for lcsh-db.terms from dump/lcsh/terms.metadata.json
+2017-09-21T10:38:07.333-0700    creating collection lcsh-db.terms using options from metadata
+2017-09-21T10:38:07.379-0700    restoring lcsh-db.terms from dump/lcsh/terms.bson
+2017-09-21T10:38:10.326-0700    [#######################.]  lcsh-db.terms  94.2MB/95.5MB  (98.6%)
+2017-09-21T10:38:10.366-0700    [########################]  lcsh-db.terms  95.5MB/95.5MB  (100.0%)
+2017-09-21T10:38:10.366-0700    restoring indexes for collection lcsh-db.terms from metadata
+2017-09-21T10:38:27.357-0700    finished restoring lcsh-db.terms (417763 documents)
+2017-09-21T10:38:27.357-0700    done
+
+Configuring user credentials in database.
+Restarting database server process.
+Killing process 10606.
+database process will be forked and run in the background.
+Starting normal database process.
+about to fork child process, waiting until server is ready for connections.
+forked process: 10714
+child process started successfully, parent exiting
+Cleaning up.
+Dassie database process is running with PID 10714.
+```
+
+You can stop the database using the `stop` command, like this:
+
+```csh
+./dassie-server stop
+```
+
+You can also query for the status of the database process using the `status` command, like this:
+
+```csh
+./dassie-server status
+```
+
+There are other options for `dassie-server`.  You can use the `-h` option to display a helpful summary.
+
+```csh
+./dassie-server -h
+
+```
+
+Note that database server process is **not automatically restarted** after you reboot your computer.  You can set up your computer to restart the process automatically, but the procedure for doing so depends on your computer's operating system.
+
+Finally, the database server (MongoDB) will be configured to listen on a default port, number 27017.  To change this, you can use the `-p` option when first configuring Dassie using `dassie-server`.  This port number will be saved to a configuration file in the current directory, so that when Dassie is restarted, it will automatically use the same port again.
+
+▶︎ Basic operation
+------------------
+
+Dassie includes a program, `dassie-server` to load and run a MongoDB database containing the LCSH term data, and a command-line application, `dassie`, that can be used to explore the database interactively. The latter also serves as an example of how to write a Python client program that accesses the database over the network&mdash;the same could be implemented using any of the different [MongoDB drivers available](https://docs.mongodb.com/ecosystem/drivers/).
+
+The basic operation is simple: cd into the `dassie` subdirectory, start the database process using `dassie-server start`, and then connect to the database to perform queries and obtain data.
+
+The `dassie` command line interface (in the `bin` subdirectory) can perform four operations: print descriptive information about one or more LCSH terms, trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms, search for terms whose labels or notes contain a given string or regular exprssion, and print some summary statistics about the database.
 
 Here is an example of searching for terms using a regular expression.  The regular expression syntax used is [the one supported by Python's `re` module](https://docs.python.org/3/howto/regex.html):
 
@@ -118,100 +220,6 @@ sh99005029: Civilization
 
 To prevent security risks that would come from having unrestricted network access to the database, the database requires the use of a user name and password; these are set at the time of first creating installing and configuring Dassie database using `dassie-server` (described in the next section).  By default, `dassie` uses the operating system's keyring/keychain functionality to get the user name and password needed to access the Dassie database over the network so that you do not have to type them every time you call `dassie`.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.  It is also possible to supply a user name and password directly using the `-u` and `-p` options, respectively, but this is discouraged because it is insecure on multiuser computer systems. (Other users could run `ps` in the background and see your credentials.)
 
-☛ Installation and configuration
---------------------------------
-
-Before using Dassie, you will need to install the following software that Dassie depends upon:
-
-* [MongoDB](https://www.mongodb.com) version 3.4 or later
-* (If using [MacPorts](https://www.macports.org) on macOS) [mongo-tools](https://www.macports.org/ports.php?by=name&substr=mongo-tools)
-* [PyMongo](https://api.mongodb.com/python/current/) for Python 3 (to use the short Python programs provided here)
-
-On macOS, we use the [MacPorts](https://www.macports.org) packages [mongodb](https://www.macports.org/ports.php?by=name&substr=mongodb), [mongo-tools](https://www.macports.org/ports.php?by=name&substr=mongo-tools) and [py-pymongo](https://www.macports.org/ports.php?by=name&substr=py-pymongo) to install the dependencies above.  We use Python to implement the short programs in this repository, but the database served by Dassie is not dependent on Python and you can use any [MongoDB API library](https://docs.mongodb.com/ecosystem/drivers/) to interact with it once it is installed and running.
-
-The next step after installing the dependencies above is to start a shell terminal in the [dassie](dassie) subdirectory.  First, choose a user login and password that you want to use for network access to the database.  Next, in a terminal shell with the Dassie directory as the current working directory, execute the program `dassie-server` with the argument `start`:
-
-```csh
-cd dassie
-./dassie-server start
-```
-
-The first time `dassie-server` is executed, it will (1) prompt you for the user name and password and configure the MongoDB database to allow only those credentials to read the database over the network, and (2) load the database contents from a database dump.  This will take extra time but only needs to be done once.  The output should look something like the following:
-
-```txt
-No database found in 'lcsh-db'.
-Will begin by setting up database.
-Creating local database directory lcsh-db.
-Moving old log file to '/Users/mhucka/repos/casics-dassie/dassie.log.old'
-Please provide a user name: 
-Please provide a password:
-Please type the password again:
-Please record the user name & password in a safe location.
-Extracting database dump from 'data/lcsh-dump.tgz'.
-Database process will be forked and run in the background.
-Starting unconfigured database process.
-about to fork child process, waiting until server is ready for connections.
-forked process: 10606
-child process started successfully, parent exiting
-Loading dump into running database instance. Note: this step
- will take time and print a lot of messages. If it succeeds,
- it will print 'finished restoring lcsh-db.terms' near the end.
-
-2017-09-21T10:38:07.332-0700    using write concern: w='1', j=false, fsync=false, wtimeout=0
-2017-09-21T10:38:07.332-0700    the --db and --collection args should only be used when restoring from a BSON file. Other uses are deprecated and will not exist in the future; use --nsInclude instead
-2017-09-21T10:38:07.333-0700    building a list of collections to restore from dump/lcsh dir
-2017-09-21T10:38:07.333-0700    found collection lcsh-db.terms bson to restore to lcsh-db.terms
-2017-09-21T10:38:07.333-0700    found collection metadata from lcsh-db.terms to restore to lcsh-db.terms
-2017-09-21T10:38:07.333-0700    reading metadata for lcsh-db.terms from dump/lcsh/terms.metadata.json
-2017-09-21T10:38:07.333-0700    creating collection lcsh-db.terms using options from metadata
-2017-09-21T10:38:07.379-0700    restoring lcsh-db.terms from dump/lcsh/terms.bson
-2017-09-21T10:38:10.326-0700    [#######################.]  lcsh-db.terms  94.2MB/95.5MB  (98.6%)
-2017-09-21T10:38:10.366-0700    [########################]  lcsh-db.terms  95.5MB/95.5MB  (100.0%)
-2017-09-21T10:38:10.366-0700    restoring indexes for collection lcsh-db.terms from metadata
-2017-09-21T10:38:27.357-0700    finished restoring lcsh-db.terms (417763 documents)
-2017-09-21T10:38:27.357-0700    done
-
-Configuring user credentials in database.
-Restarting database server process.
-Killing process 10606.
-database process will be forked and run in the background.
-Starting normal database process.
-about to fork child process, waiting until server is ready for connections.
-forked process: 10714
-child process started successfully, parent exiting
-Cleaning up.
-Dassie database process is running with PID 10714.
-```
-
-This procedure will leave the database running on your computer, so that you can immediately try `dassie` to experiment with the system.
-
-The database server (MongoDB) will be configured to listen on a default port, number 27017.  To change this, you can use the `-p` option when first configuring Dassie using `dassie-server`.  This port number will be saved to a configuration file in the current directory, so that when Dassie is restarted, it will automatically use the same port again.  Here is an example of setting the port number to `31313`&mdash;note that this is only an example and there is no reason to use this value in particular:
-
-```csh
-./dassie-server -p 31313 start
-```
-
-You can stop the database using the `stop` command, like this:
-
-```csh
-./dassie-server stop
-```
-
-You can also query for the status of the database process using the `status` command, like this:
-
-```csh
-./dassie-server status
-```
-
-There are other options for `dassie-server`.  You can use the `-h` option to display a helpful summary.
-
-```csh
-./dassie-server -h
-
-```
-
-Note that database server process is **not automatically restarted** after you reboot your computer.  You can set up your computer to restart the process automatically, but the procedure for doing so depends on your computer's operating system.
-
 🗄 Database structure details
 ----------------------------
 
@@ -269,13 +277,6 @@ After executing the code above, you would be able to issue commands such as `fin
 entry = lcsh_terms.find_one( {'_id': 'sh95000713'} )
 ```
 
-
-✐ Other information
------------------
-
-Dassie was develope to support functionality in our [CASICS](https://github.com/casics) project, where we annotate GitHub repository entries with terms from the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  To do this, we developed a simple annotation interface that includes a hierarchical browser for LCSH terms, to allow search and navigation in the term hierarchy.  We developed Dassie to provide a database server to support the functionality of the annotation interface.
-
-
 ⁇ Getting help and support
 --------------------------
 
@@ -284,7 +285,7 @@ If you find an issue, please submit it in [the GitHub issue tracker](https://git
 ♬ Contributing: info for developers
 -----------------------------------
 
-A lot remains to be done on CASICS in many areas.  We would be happy to receive your help and participation if you are interested.  Please feel free to contact the developers either via GitHub or the mailing list [casics-team@googlegroups.com](casics-team@googlegroups.com).
+Any constructive contributions &ndash; bug reports, pull requests (code or documentation), suggestions for improvements, and more &ndash; are welcome.  Please feel free to contact me directly, or even better, jump right in and use the standard GitHub approach of forking the repo and creating a pull request.
 
 Everyone is asked to read and respect the [code of conduct](CONDUCT.md) when participating in this project.
 
