@@ -1,4 +1,4 @@
-Scripts for recreating the LoCTerms database
+Scripts for recreating the Dassie database
 ============================================
 
 Dependencies
@@ -48,5 +48,5 @@ The process is basically this:
    ```
    where `PID` is the process id of the `mongod` process as reported by `start-empty-mongodb`.
 
-If all went well, there will be a database directory named `lcsh-db` in the current directory.  This can be used to replace the `lcsh-db` directory in the parent LoCTerms directory.  It can also be saved as a database dump, and used to replace the file `lcsh-dump.tgz` in `../data`.
+If all went well, there will be a database directory named `lcsh-db` in the current directory.  This can be used to replace the `lcsh-db` directory in the parent Dassie directory.  It can also be saved as a database dump, and used to replace the file `lcsh-dump.tgz` in `../data`.
 

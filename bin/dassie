@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # =============================================================================
-# @file    locterms
-# @brief   Command line interface to query the LoCTerms database server
+# @file    dassie
+# @brief   Command line interface to query the Dassie database server
 # @author  Michael Hucka <mhucka@caltech.edu>
 # @license Please see the file named LICENSE in the project directory
-# @website https://github.com/casics/locterms
+# @website https://github.com/casics/dassie
 #
-# This is a user interface for interacting with the LoCTerms database via its
+# This is a user interface for interacting with the Dassie database via its
 # MongoDB network interface.  Please use the -h command line option to get a
 # summary of how to use it and the options available.
 # =============================================================================
@@ -17,5 +17,5 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 # Hand over to the command line interface.
-from locterms import *
+from dassie import *
 plac.call(main)

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 '''
-query_locterms: interactively print information about an LCSH term.
+query_dassie: interactively print information about an LCSH term.
 
-This module allows a user to contact the LoCTerms database and query it to
+This module allows a user to contact the Dassie database and query it to
 get information about Library of Congress Subject Heading terms.  The
-LoCTerms database process must already be running.  The action to be
+Dassie database process must already be running.  The action to be
 performed must be indicated by using one of the command line flags.
 Please see the definition of main() for more information about the 
 available commands.
@@ -34,16 +34,16 @@ _CONN_TIMEOUT = 5000
 '''Time to wait for connection to database, in milliseconds.'''
 
 _DEFAULT_HOST = 'localhost'
-'''Default network host for LoCTerms server if no explicit host is given.'''
+'''Default network host for Dassie server if no explicit host is given.'''
 
 _DEFAULT_PORT = 27017
 '''Default network port for MongoDB if no explicit port number is given.'''
 
 _DB_NAME = 'lcsh-db'
-'''The name of our LoCTerms database in MongoDB.'''
+'''The name of our Dassie database in MongoDB.'''
 
-_KEYRING = "org.casics.locterms"
-'''The name of the keyring entry for LoCTerms client users.'''
+_KEYRING = "org.casics.dassie"
+'''The name of the keyring entry for Dassie client users.'''
 
 
 # Main body.
@@ -67,9 +67,9 @@ _KEYRING = "org.casics.locterms"
 def main(describe=False, find=False, trace=False, summarize=False,
          user=None, pswd=None, host=None, port=None,
          nocolor=False, nokeyring=False, *args):
-    '''Query LoCTerms for information about an LCSH term.  The LoCTerms
-database process must already be running.  The action to be performed must
-be indicated by using one of the following two command line flags:
+    '''Query Dassie for information about an LCSH term.  The Dassie database
+process must already be running.  The action to be performed must be
+indicated by using one of the following two command line flags:
 
   -d    Describe the LCSH term(s) given on the command line
   -f    Search the label, alt_label and note fields for a string or regex
@@ -78,7 +78,7 @@ be indicated by using one of the following two command line flags:
 
 By default, this uses the operating system's keyring/keychain functionality
 to get the user name, password, port number and host name needed to access
-the LoCTerms database over the network.  If no such credentials are found, it
+the Dassie database over the network.  If no such credentials are found, it
 will query the user interactively for the information, and (unless the -X
 argument is given) then store them in the user's keyring/keychain so that it
 does not have to ask again in the future.  It is also possible to supply the
@@ -114,7 +114,7 @@ Congress Subject Headings (LCSH).
     if sum(x for x in [describe, trace, summarize]) > 1:
         raise SystemExit(colorcode('Can only perform one action at a time.', 'error'))
     if not user or not pswd or not host or not port:
-        (user, pswd, host, port) = obtain_credentials(_KEYRING, "LoCTerms database",
+        (user, pswd, host, port) = obtain_credentials(_KEYRING, "Dassie database",
                                                       user, pswd, host=_DEFAULT_HOST,
                                                       port=_DEFAULT_PORT)
     if keyring:
@@ -272,7 +272,7 @@ def print_details(entry, colorize=False):
 
 
 def print_summary(lcsh_terms, lcsh_info, colorize=False):
-    '''Print some statistics about the LoCTerms database.'''
+    '''Print some statistics about the Dassie database.'''
     info = lcsh_info.find_one({})
     count = lcsh_terms.count()
     msg('Number of LCSH terms in database: {}'.format(humanize.intcomma(count)))

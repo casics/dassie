@@ -1,10 +1,10 @@
 #!/bin/bash
 # =============================================================================
-# @file    locterms-server
-# @brief   Start/stop/control the LoCTerms database server
+# @file    dassie-server
+# @brief   Start/stop/control the Dassie database server
 # @author  Michael Hucka <mhucka@caltech.edu>
 # @license Please see the file named LICENSE in the project directory
-# @website https://github.com/casics/locterms
+# @website https://github.com/casics/dassie
 #
 # This script makes use of fragments of code found on Stack Overflow.
 # Code contributed to Stack Overflow is licensed CC-BY-SA 3.0.
@@ -12,15 +12,15 @@
 # =============================================================================
 
 version_number="1.0.0"
-website="https://github.com/casics/locterms"
+website="https://github.com/casics/dassie"
 
 # Configuration variables.
 # .............................................................................
 
 dump_file="data/lcsh-dump.tgz"
 dbpath="lcsh-db"
-log_file="locterms.log"
-conf_file="locterms.conf"
+log_file="dassie.log"
+conf_file="dassie.conf"
 pid_file="mongod.pid"
 port=27017
 username=
@@ -49,10 +49,10 @@ cat <<EOF >&2
 Usage:
     $program [options] {start|stop|restart|status}
 
-This controls the database process for LoCTerms.  It must be executed from
-the directory where the LoCTerm database is located.
+This controls the database process for Dassie.  It must be executed from
+the directory where the Dassie database is located.
 
-If this is the first time that LoCTerms has been invoked and this instance of
+If this is the first time that Dassie has been invoked and this instance of
 the database has never been loaded, $program will automatically
 unpack and restore the database archive before starting the server.
 (Subsequent invocations of $program will not need to do this,
@@ -70,7 +70,7 @@ log file.
 
 The database will listen on the network port $port unless it is changed using
 the argument "-p".  This port number will be saved to a configuration file in
-the current directory so that when the LoCTerms server is restarted, it will
+the current directory so that when the Dassie server is restarted, it will
 use the same port number again.
 
 When connecting clients to the database, use the user name, password and port
@@ -80,7 +80,7 @@ is saved in the config file located at
 The path to the config file can be changed using the "-c" option.
 
 Options:
-    -c, --config        Use the given file as the LoCTerms configuration file
+    -c, --config        Use the given file as the Dassie configuration file
     -f, --foreground    Run database process in the foreground
     -h, --help          Print this help message and exit
     -l, --logfile       Write logs to the given file instead of the default
@@ -337,7 +337,7 @@ stop_mongod() {
         $dry_run || kill $pid
         $dry_run || rm "$pid_file"
     else
-        say warning "LoCTerms database process does not appear to be running."
+        say warning "Dassie database process does not appear to be running."
     fi
 }
 
@@ -349,9 +349,9 @@ restart_mongod() {
 status_mongod() {
     read running pid < <(mongod_running)
     if $running; then
-        say info "LoCTerms database process is running with PID $pid."
+        say info "Dassie database process is running with PID $pid."
     else
-        say warning "LoCTerms database process does not appear to be running."
+        say warning "Dassie database process does not appear to be running."
     fi
 }
 
@@ -419,7 +419,7 @@ mongod_running() {
 }
 
 quit_if_running() {
-    # Check for pid file.  If present, it may indicate a locterms mongod
+    # Check for pid file.  If present, it may indicate a dassie mongod
     # process is already running.
 
     read running pid < <(mongod_running)
