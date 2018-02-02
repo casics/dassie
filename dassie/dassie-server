@@ -18,10 +18,9 @@ website="https://github.com/casics/dassie"
 # .............................................................................
 
 dump_file="data/lcsh-dump.tgz"
-dbpath="lcsh-db"
+dbname="lcsh-db"
 log_file="dassie.log"
 conf_file="dassie.conf"
-pid_file="mongod.pid"
 port=27017
 username=
 password=
@@ -32,11 +31,14 @@ password=
 # Default variable values.
 
 program=${0##*/}
+program_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 args_given="$*"
 chatty=true
 dry_run=false
 foreground=false
 use_log_file=true
+pid_file=
+dbpath=
 exit_code=0
 start_time=$(/bin/date '+%G-%m-%d:%H%M')
 action=
@@ -44,7 +46,7 @@ action=
 # Helper functions.
 
 print_usage() {
-    convert_paths
+    set_paths
 cat <<EOF >&2
 Usage:
     $program [options] {start|stop|restart|status}
@@ -257,7 +259,7 @@ cleanup_database_dump() {
 }
 
 restore_mongo_database() {
-    $dry_run || mongorestore -v --db $dbpath dump/lcsh
+    $dry_run || mongorestore -v --db $dbname dump/lcsh
 }
 
 config_mongod_user() {
@@ -278,10 +280,7 @@ EOF
 start_mongod_process() {
     # Start the mongod process.
 
-    local mongo_args="--pidfilepath $pid_file --directoryperdb --port $port"
-    local log_args="--logpath $log_file --logRotate reopen --logappend"
-    local auth_args="--auth --bind_ip 127.0.0.1"
-    local fork="--fork "
+    local fork="--fork"
     local restore=false
 
     # If we're running in the foreground, we don't write to the log file.
@@ -298,14 +297,21 @@ start_mongod_process() {
         say info "Database process will be forked and run in the background."
     fi
 
+    old_IFS=$IFS
+    IFS=$'\n'
     if [[ ! -z "${1:-}" ]]; then
         # If given an argument, start without authentication
         say info "Starting unconfigured database process."
-        $dry_run || mongod $fork $log_args $mongo_args --dbpath=$dbpath
+        $dry_run || mongod $fork --pidfilepath $pid_file --dbpath=$dbpath \
+                           --logpath $log_file --logRotate reopen --logappend \
+                           --directoryperdb --port $port
     else
         say info "Starting normal database process."
-        $dry_run || mongod $fork $log_args $mongo_args $auth_args --dbpath=$dbpath
+        $dry_run || mongod $fork --pidfilepath $pid_file --dbpath=$dbpath \
+                           --logpath $log_file --logRotate reopen --logappend \
+                           --directoryperdb --port $port --auth --bind_ip 127.0.0.1
     fi
+    IFS=$old_IFS
 }
 
 start_mongod() {
@@ -366,21 +372,28 @@ check_log_file() {
 }
 
 remove_stale_pid_file() {
+    old_IFS=$IFS
+    IFS=$'\n'
     if [[ -f "$pid_file" ]]; then
+        IFS=$old_IFS
         read running pid < <(mongod_running)
         if ! $running; then
+            old_IFS=$IFS
+            IFS=$'\n'
             say warning "Removing stale file $pid_file."
             $dry_run || rm -f "$pid_file"
         fi
     fi
+    IFS=$old_IFS
 }
 
-convert_paths() {
-    # Convert relative paths to absolute.
-
+set_paths() {
+    cd "$program_dir"
+    pid_file=$(pid_file_path)
     log_file=$(abspath $log_file)
-    pid_file=$(abspath $pid_file)
     conf_file=$(abspath $conf_file)
+    dump_file=$(abspath $dump_file)
+    dbpath=$(abspath $dbname)
 }
 
 # Code modified from https://stackoverflow.com/a/31861475/743730
@@ -396,10 +409,35 @@ abspath() {
     fi
 }
 
+# The pid file should be somewhere independent of where dassie is installed,
+# but finding a suitable location on different OSes is complicated.
+pid_file_path() {
+    # Returns the path to the pid file.
+
+    file="dassie.pid"
+    # Testing whether /var/run is writable can be tricky, because ACLs may
+    # prevent writing even if the Unix file mode says it's writable.
+    if [[ -w /var/run/user/$UID ]] && true >> /var/run/user/$UID/$file; then
+        # CentOS, Ubuntu, probably Fedora too.
+        echo "/var/run/user/$UID/$file"
+    elif [[ -w /var/run ]] && true >> /var/run/$file; then
+        # RHEL, macOS, maybe others, but needs to be running as user root.
+        echo "/var/run/$file"
+    elif [[ -w "$HOME/Library/Application Support" ]]; then
+        # Getting a little desperate.  The following is okay on a Mac.
+        echo "$HOME/Library/Application Support/org.casics.dassie.pid"
+    else
+        # Fall back to the directory where this script is found.
+        echo $(abspath $file)
+    fi
+}
+
 # This function modified from http://stackoverflow.com/a/17686989/743730
 mongod_running() {
     # Returns 1-2 values: a Boolean and optionally the pid.
 
+    old_IFS=$IFS
+    IFS=$'\n'
     local status=false
     if [[ -f "$pid_file" ]]; then
         if [[ -n $(pgrep -F $pid_file) ]]; then
@@ -415,6 +453,7 @@ mongod_running() {
             status="true $pid"
         fi
     fi
+    IFS=$old_IFS
     echo $status
 }
 
@@ -548,7 +587,7 @@ read_credentials() {
 # Main entry point.
 
 parse_args "$@"
-convert_paths
+set_paths
 prepare_for_action
 dispatch_action
 
