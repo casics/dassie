@@ -16,19 +16,22 @@ Dassie implements a database of the subject term hierarchies found in the [Libra
 
 Dassie was developed to solve a simple need: to provide a fast way to search and browse the terms in the [Library of Congress Subject Headings (LCSH)](http://id.loc.gov/authorities/subjects.html).  We converted the essential parts of the LCSH linked data graph into a database that makes explicit the ["is-a"](https://en.wikipedia.org/wiki/Hyponymy_and_hypernymy) relationships between LCSH terms.  The database we use is [MongoDB](https://mongodb.com).  The result, Dassie (a loose acronym for _"<b>da</b>tabase of <b>s</b>ubject term<b>s</b> and hierarch<b>ie</b>s"_), is a system that allows programs to use normal MongoDB network API calls to search for LCSH terms and their relationships.
 
-Here is an example of using the `dassie` example program to describe the term `sh2008002926`:
+Here's an example of using the `dassie` example program to trace paths from term `sh2008002926` to the top-most terms:
 
 ```csh
-# dassie -d sh2008002926
+# dassie -t sh2008002926
 ======================================================================
-sh2008002926
-         URL: http://id.loc.gov/authorities/subjects/sh2008002926.html
-       label: Systems biology
-  alt labels: (none)
-    narrower: (none)
-     broader: sh2003008355
-     topmost: sh00007934, sh85118553
-        note: (none)
+sh85118553: Science
+└─ sh85076841: Life sciences
+   └─ sh85014203: Biology
+      └─ sh2003008355: Computational biology
+         └─ sh2008002926: Systems biology
+
+sh00007934: Science
+└─ sh85076841: Life sciences
+   └─ sh85014203: Biology
+      └─ sh2003008355: Computational biology
+         └─ sh2008002926: Systems biology
 ======================================================================
 ```
 
@@ -150,6 +153,22 @@ Dassie includes a program, `dassie-server` to load and run a MongoDB database co
 The basic operation is simple: cd into the `dassie` subdirectory, start the database process using `dassie-server start`, and then connect to the database to perform queries and obtain data.
 
 The `dassie` command line interface (in the `bin` subdirectory) can perform four operations: print descriptive information about one or more LCSH terms, trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms, search for terms whose labels or notes contain a given string or regular exprssion, and print some summary statistics about the database.
+
+Here is an example of using `dassie` describe the term `sh2008002926`:
+
+```csh
+# dassie -d sh2008002926
+======================================================================
+sh2008002926
+         URL: http://id.loc.gov/authorities/subjects/sh2008002926.html
+       label: Systems biology
+  alt labels: (none)
+    narrower: (none)
+     broader: sh2003008355
+     topmost: sh00007934, sh85118553
+        note: (none)
+======================================================================
+```
 
 Here is an example of searching for terms using a regular expression.  The regular expression syntax used is [the one supported by Python's `re` module](https://docs.python.org/3/howto/regex.html):
 
