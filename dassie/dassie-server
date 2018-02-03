@@ -51,8 +51,7 @@ cat <<EOF >&2
 Usage:
     $program [options] {start|stop|restart|status}
 
-This controls the database process for Dassie.  It must be executed from
-the directory where the Dassie database is located.
+This controls the database process for Dassie.
 
 If this is the first time that Dassie has been invoked and this instance of
 the database has never been loaded, $program will automatically
@@ -70,14 +69,7 @@ be helpful to run the database server in the foreground by using the "-f"
 option; note that doing so will mean that output will NOT be written to the
 log file.
 
-The database will listen on the network port $port unless it is changed using
-the argument "-p".  This port number will be saved to a configuration file in
-the current directory so that when the Dassie server is restarted, it will
-use the same port number again.
-
-When connecting clients to the database, use the user name, password and port
-number provided during the first-time configuration process.  The port number
-is saved in the config file located at
+Information about the Dassie server will be saved to the configuration file
 "$conf_file".
 The path to the config file can be changed using the "-c" option.
 
@@ -87,7 +79,6 @@ Options:
     -h, --help          Print this help message and exit
     -l, --logfile       Write logs to the given file instead of the default
     -n, --dry-run       Show what would be done, but don't do it
-    -p, --port          Use the given port instead of the default
     -q, --quiet         Don't display informative messages
     -v, --version       Display the current version number and exit
 
@@ -126,10 +117,6 @@ parse_args() {
             -n | --dry-run )
                 dry_run=true
                 ;;
-            -p | --port )
-                shift
-                port=$1
-                ;;
             -q | --quiet )
                 chatty=false
                 ;;
@@ -160,11 +147,6 @@ prepare_for_action() {
         quit 0
     fi
 
-    if ! (is_integer $port); then
-        say error "Port argument value '$port' is not a number."
-        quit 1
-    fi
-
     if [[ $action == start ]]; then
         quit_if_running
     fi
@@ -172,6 +154,7 @@ prepare_for_action() {
     if [[ $action =~ ^(start|stop|restart)$ ]]; then
         remove_stale_pid_file
         check_log_file
+        read_conf_file
         welcome
     fi
 }
@@ -197,9 +180,12 @@ dispatch_action() {
 }
 
 recover_database() {
+    set_ifs
     $dry_run || mkdir -p "$dbpath"
+    restore_ifs
 
-    read_credentials
+    ask_port
+    ask_credentials
 
     say info "Extracting database dump from '$dump_file'."
     extract_database_dump
@@ -245,13 +231,25 @@ save_conf_file() {
     # Currently we only save the port number.
 
     if ! $dry_run; then
-        echo "port=$port" > "$conf_file"
+        set_ifs
+        echo "$port" > "$conf_file"
         chmod og-rwx "$conf_file"
+        restore_ifs
+    fi
+}
+
+read_conf_file() {
+    if [[ -f "$conf_file" ]]; then
+        set_ifs
+        read port < "$conf_file"
+        restore_ifs
     fi
 }
 
 extract_database_dump() {
+    set_ifs
     $dry_run || tar xzf "$dump_file"
+    restore_ifs
 }
 
 cleanup_database_dump() {
@@ -297,8 +295,7 @@ start_mongod_process() {
         say info "Database process will be forked and run in the background."
     fi
 
-    old_IFS=$IFS
-    IFS=$'\n'
+    set_ifs
     if [[ ! -z "${1:-}" ]]; then
         # If given an argument, start without authentication
         say info "Starting unconfigured database process."
@@ -311,7 +308,7 @@ start_mongod_process() {
                            --logpath $log_file --logRotate reopen --logappend \
                            --directoryperdb --port $port --auth --bind_ip 127.0.0.1
     fi
-    IFS=$old_IFS
+    restore_ifs
 }
 
 start_mongod() {
@@ -334,6 +331,9 @@ start_mongod() {
     else
         start_mongod_process
     fi
+
+    say info "Using config file $conf_file."
+    say info "Using port $port."
 }
 
 stop_mongod() {
@@ -341,7 +341,9 @@ stop_mongod() {
     if $running; then
         say info "Killing process $pid."
         $dry_run || kill $pid
+        set_ifs
         $dry_run || rm "$pid_file"
+        restore_ifs
     else
         say warning "Dassie database process does not appear to be running."
     fi
@@ -362,6 +364,8 @@ status_mongod() {
 }
 
 check_log_file() {
+    set_ifs
+
     if $use_log_file && [[ -n $log_file ]]; then
         if [[ -e "$log_file" && ! -w "$log_file" ]]; then
             printf '%s\n' "Unable to write log file $log_file."
@@ -369,31 +373,32 @@ check_log_file() {
             quit 1
         fi
     fi
+
+    restore_ifs
 }
 
 remove_stale_pid_file() {
-    old_IFS=$IFS
-    IFS=$'\n'
+    set_ifs
     if [[ -f "$pid_file" ]]; then
-        IFS=$old_IFS
+        restore_ifs
         read running pid < <(mongod_running)
         if ! $running; then
-            old_IFS=$IFS
-            IFS=$'\n'
+            set_ifs
             say warning "Removing stale file $pid_file."
             $dry_run || rm -f "$pid_file"
         fi
     fi
-    IFS=$old_IFS
+    restore_ifs
 }
 
 set_paths() {
     cd "$program_dir"
     pid_file=$(pid_file_path)
     log_file=$(abspath $log_file)
-    conf_file=$(abspath $conf_file)
     dump_file=$(abspath $dump_file)
     dbpath=$(abspath $dbname)
+    # Put the configuration file in the database directory.
+    conf_file=$dbpath/$conf_file
 }
 
 # Code modified from https://stackoverflow.com/a/31861475/743730
@@ -436,8 +441,7 @@ pid_file_path() {
 mongod_running() {
     # Returns 1-2 values: a Boolean and optionally the pid.
 
-    old_IFS=$IFS
-    IFS=$'\n'
+    set_ifs
     local status=false
     if [[ -f "$pid_file" ]]; then
         if [[ -n $(pgrep -F $pid_file) ]]; then
@@ -453,7 +457,7 @@ mongod_running() {
             status="true $pid"
         fi
     fi
-    IFS=$old_IFS
+    restore_ifs
     echo $status
 }
 
@@ -559,7 +563,24 @@ is_integer() {
     [[ $1 =~ ^[0-9]+$ ]]
 }
 
-read_credentials() {
+ask_port() {
+    # Ask the user for the port number to use.
+    while true; do
+        say info "Please indicate the port to use (hit return for default $port): " -n
+        read newport
+        if [[ -z "$newport" ]]; then
+            say info "Using default port number $port."
+            break
+        elif ! (is_integer $newport); then
+            say error "Port argument value $port is not a number."
+        else
+            port=$newport
+            break
+        fi
+    done
+}
+
+ask_credentials() {
     # Read user name and password.  Verify what the use types by making them
     # type it twice.  Don't allow blank passwords.  Encrypt and uri-encode
     # the password
@@ -582,6 +603,14 @@ read_credentials() {
             break
         fi
     done
+}
+
+set_ifs() {
+    IFS=$'\n'
+}
+
+restore_ifs() {
+    IFS=$' \t\n'
 }
 
 # Main entry point.
