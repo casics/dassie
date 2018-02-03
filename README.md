@@ -152,7 +152,7 @@ Dassie includes a program, `dassie-server` to load and run a MongoDB database co
 
 The basic operation is simple: cd into the `dassie` subdirectory, start the database process using `dassie-server start`, and then connect to the database to perform queries and obtain data.
 
-The `dassie` command line interface (in the `bin` subdirectory) can perform four operations: print descriptive information about one or more LCSH terms, trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms, search for terms whose labels or notes contain a given string or regular exprssion, and print some summary statistics about the database.
+The `dassie` command line interface (in the `bin` subdirectory) can perform four operations: print descriptive information about one or more LCSH terms, trace the "is-a" hierarchy upward from a given LCSH term until it reaches terms that have no hypernyms, search for terms whose labels or notes contain a given string or regular expression, and print some summary statistics about the database.
 
 Here is an example of using `dassie` describe the term `sh2008002926`:
 
