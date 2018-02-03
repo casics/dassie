@@ -37,8 +37,6 @@ We used Python 3 to implement `dassie` as an example, but the database served by
 ✺ Installing and configuring Dassie
 ----------------------------------
 
-Here follow detailed instructions for getting Dassie running on a computer.
-
 ### ⓵&nbsp;&nbsp; _Download Dassie_
 You can either download the release archive, or clone the repository directly:
 
@@ -56,11 +54,10 @@ Dassie needs the following software to run.  (On macOS, we use the [MacPorts](ht
 
 ### ⓷&nbsp;&nbsp; _Configure the server process_
 
-First, choose a user login and password that you want to use for network access to the database.  Next, start a terminal shell and cd into the [dassie](dassie) subdirectory and run the program `dassie-server` with the argument `start`:
+First, choose a user login and password that you want to use for network access to the database.  Next, start a terminal shell and run the program `dassie-server` (found in the [dassie](dassie) subdirectory) with the argument `start`:
 
 ```csh
-cd dassie
-./dassie-server start
+dassie-server start
 ```
 
 The first time `dassie-server` is executed, it will (1) prompt you for the user name and password and configure the MongoDB database to allow only those credentials to read the database over the network, and (2) load the database contents from a compressed database dump.  This will take extra time but only needs to be done once.  The output should look something like the following:
@@ -113,25 +110,25 @@ Dassie database process is running with PID 10714.
 You can stop the database using the `stop` command, like this:
 
 ```csh
-./dassie-server stop
+dassie-server stop
 ```
 
 You can also query for the status of the database process using the `status` command, like this:
 
 ```csh
-./dassie-server status
+dassie-server status
 ```
 
 There are other options for `dassie-server`.  You can use the `-h` option to display a helpful summary.
 
 ```csh
-./dassie-server -h
+dassie-server -h
 
 ```
 
 Note that database server process is **not automatically restarted** after you reboot your computer.  You can set up your computer to restart the process automatically, but the procedure for doing so depends on your computer's operating system.
 
-Finally, the database server (MongoDB) will be configured to listen on a default port, number 27017.  To change this, you can use the `-p` option when first configuring Dassie using `dassie-server`.  This port number will be saved to a configuration file in the current directory, so that when Dassie is restarted, it will automatically use the same port again.
+Finally, the database server (MongoDB) will be configured to listen on a default port, number 27017.  This can be changed during the initial setup process; `dassie-server` will ask for the port number and save it in a configuration file, so that when Dassie is restarted it will automatically use the same port again.
 
 ▶︎ Basic operation
 ------------------
@@ -145,8 +142,7 @@ The `dassie` command line interface (in the `bin` subdirectory) can perform four
 Here is an example of searching for terms using a regular expression.  The regular expression syntax used is [the one supported by Python's `re` module](https://docs.python.org/3/howto/regex.html):
 
 ```csh
-# cd bin
-# ./dassie -f 'biolog.*simulat.*'
+# bin/dassie -f 'biolog.*simulat.*'
 ======================================================================
 Found 3 entries containing "biolog.*simulat.*" in label, alt_label, or notes
 sh2009117081
@@ -181,7 +177,7 @@ sh93000478
 And here is an example of output from using `dassie` to trace the term graph from `sh85118400` upward until it reaches the top-most LCSH terms.  This shows that the hypernym links from `sh85118400` end in 4 terms (`sh85008810`, `sh2002007885`, `sh85010480`, and `sh99005029`) that have no further hypernyms, and there are 5 paths that lead there from `sh85118400`:
 
 ```csh
-# ./dassie -t sh85118400
+# bin/dassie -t sh85118400
 ======================================================================
 sh85008810: Associations, institutions, etc
 └─ sh85048306: Financial institutions
@@ -218,7 +214,7 @@ sh99005029: Civilization
                └─ sh85118400: School savings banks
 ```
 
-To prevent security risks that would come from having unrestricted network access to the database, the database requires the use of a user name and password; these are set at the time of first creating installing and configuring Dassie database using `dassie-server` (described in the next section).  By default, `dassie` uses the operating system's keyring/keychain functionality to get the user name and password needed to access the Dassie database over the network so that you do not have to type them every time you call `dassie`.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.  It is also possible to supply a user name and password directly using the `-u` and `-p` options, respectively, but this is discouraged because it is insecure on multiuser computer systems. (Other users could run `ps` in the background and see your credentials.)
+To prevent security risks that would come from having unrestricted network access to the database, the database requires the use of a user name and password; these are set at the time of first creating installing and configuring Dassie database using `dassie-server` (described in the next section).  By default, `dassie` uses the operating system's keyring/keychain functionality to get the user name and password needed to access the Dassie database over the network so that you do not have to type them every time you call `dassie`.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.  It is also possible to supply a user name and password directly using the `-u` and `-p` options to `dassie`, respectively, but this is discouraged because it is insecure on multiuser computer systems. (Other users could run `ps` in the background and see your credentials.)
 
 🗄 Database structure details
 ----------------------------
