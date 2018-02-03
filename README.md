@@ -11,6 +11,21 @@ Dassie implements a database of the subject term hierarchies found in the [Libra
 *Repository*:   [https://github.com/casics/dassie](https://github.com/casics/dassie)<br>
 *License*:      Unless otherwise noted, this content is licensed under the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html) license.
 
+Table of Contents
+-----------------
+
+  * [Introduction](#-introduction)
+  * [Installing and configuring Dassie](#-installing-and-configuring-dassie)
+     * [Download Dassie](#-download-dassie)
+     * [Install software that Dassie depends upon](#-install-software-that-dassie-depends-upon)
+     * [Configure the server process](#-configure-the-server-process)
+  * [Basic operation](#︎-basic-operation)
+  * [Database structure details](#-database-structure-details)
+  * [Database connection details](#️-database-connection-details)
+  * [Getting help and support](#-getting-help-and-support)
+  * [Contributing: info for developers](#-contributing-info-for-developers)
+  * [Acknowledgments](#️-acknowledgments)
+
 ☀ Introduction
 -----------------------------
 
