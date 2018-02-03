@@ -63,48 +63,60 @@ dassie-server start
 The first time `dassie-server` is executed, it will (1) prompt you for the user name and password and configure the MongoDB database to allow only those credentials to read the database over the network, and (2) load the database contents from a compressed database dump.  This will take extra time but only needs to be done once.  The output should look something like the following:
 
 ```txt
-No database found in 'lcsh-db'.
+No database found in '/Users/mhucka/repos/dassie-git/dassie/lcsh-db'.
 Will begin by setting up database.
-Creating local database directory lcsh-db.
-Moving old log file to '/Users/mhucka/repos/casics-dassie/dassie.log.old'
+Creating local database directory /Users/mhucka/repos/dassie-git/dassie/lcsh-db.
+Moving old log file to '/Users/mhucka/repos/dassie-git/dassie/dassie.log.old'
+Please indicate the port to use (hit return for default 27017):
+Using default port number 27017.
 Please provide a user name: 
 Please provide a password:
 Please type the password again:
 Please record the user name & password in a safe location.
-Extracting database dump from 'data/lcsh-dump.tgz'.
+Extracting database dump from '/Users/mhucka/repos/dassie-git/dassie/data/lcsh-dump.tgz'.
 Database process will be forked and run in the background.
 Starting unconfigured database process.
 about to fork child process, waiting until server is ready for connections.
-forked process: 10606
+forked process: 59911
 child process started successfully, parent exiting
 Loading dump into running database instance. Note: this step
  will take time and print a lot of messages. If it succeeds,
- it will print 'finished restoring lcsh-db.terms' near the end.
+ it will print 'finished restoring /Users/mhucka/repos/dassie-git/dassie/lcsh-db.terms' near the end.
 
-2017-09-21T10:38:07.332-0700    using write concern: w='1', j=false, fsync=false, wtimeout=0
-2017-09-21T10:38:07.332-0700    the --db and --collection args should only be used when restoring from a BSON file. Other uses are deprecated and will not exist in the future; use --nsInclude instead
-2017-09-21T10:38:07.333-0700    building a list of collections to restore from dump/lcsh dir
-2017-09-21T10:38:07.333-0700    found collection lcsh-db.terms bson to restore to lcsh-db.terms
-2017-09-21T10:38:07.333-0700    found collection metadata from lcsh-db.terms to restore to lcsh-db.terms
-2017-09-21T10:38:07.333-0700    reading metadata for lcsh-db.terms from dump/lcsh/terms.metadata.json
-2017-09-21T10:38:07.333-0700    creating collection lcsh-db.terms using options from metadata
-2017-09-21T10:38:07.379-0700    restoring lcsh-db.terms from dump/lcsh/terms.bson
-2017-09-21T10:38:10.326-0700    [#######################.]  lcsh-db.terms  94.2MB/95.5MB  (98.6%)
-2017-09-21T10:38:10.366-0700    [########################]  lcsh-db.terms  95.5MB/95.5MB  (100.0%)
-2017-09-21T10:38:10.366-0700    restoring indexes for collection lcsh-db.terms from metadata
-2017-09-21T10:38:27.357-0700    finished restoring lcsh-db.terms (417763 documents)
-2017-09-21T10:38:27.357-0700    done
+2018-02-03T09:18:08.938-0800    using write concern: w='1', j=false, fsync=false, wtimeout=0
+2018-02-03T09:18:08.939-0800    the --db and --collection args should only be used when restoring from a BSON file. Other uses are deprecated and will not exist in the future; use --nsInclude instead
+2018-02-03T09:18:08.939-0800    building a list of collections to restore from dump/lcsh dir
+2018-02-03T09:18:08.939-0800    found collection lcsh-db.info bson to restore to lcsh-db.info
+2018-02-03T09:18:08.939-0800    found collection metadata from lcsh-db.info to restore to lcsh-db.info
+2018-02-03T09:18:08.939-0800    found collection lcsh-db.terms bson to restore to lcsh-db.terms
+2018-02-03T09:18:08.939-0800    found collection metadata from lcsh-db.terms to restore to lcsh-db.terms
+2018-02-03T09:18:08.939-0800    reading metadata for lcsh-db.info from dump/lcsh/info.metadata.json
+2018-02-03T09:18:08.939-0800    reading metadata for lcsh-db.terms from dump/lcsh/terms.metadata.json
+2018-02-03T09:18:08.940-0800    creating collection lcsh-db.info using options from metadata
+2018-02-03T09:18:08.940-0800    creating collection lcsh-db.terms using options from metadata
+2018-02-03T09:18:09.003-0800    restoring lcsh-db.info from dump/lcsh/info.bson
+2018-02-03T09:18:09.057-0800    no indexes to restore
+2018-02-03T09:18:09.057-0800    finished restoring lcsh-db.info (1 document)
+2018-02-03T09:18:09.057-0800    restoring lcsh-db.terms from dump/lcsh/terms.bson
+2018-02-03T09:18:11.931-0800    [##################......]  lcsh-db.terms  72.0MB/95.5MB  (75.4%)
+2018-02-03T09:18:12.920-0800    [########################]  lcsh-db.terms  95.5MB/95.5MB  (100.0%)
+2018-02-03T09:18:12.920-0800    restoring indexes for collection lcsh-db.terms from metadata
+2018-02-03T09:18:30.156-0800    finished restoring lcsh-db.terms (417763 documents)
+2018-02-03T09:18:30.156-0800    done
+Saving info to '/Users/mhucka/repos/dassie-git/dassie/lcsh-db/dassie.conf'.
 
 Configuring user credentials in database.
 Restarting database server process.
-Killing process 10606.
-database process will be forked and run in the background.
+Killing process 59911.
+Database process will be forked and run in the background.
 Starting normal database process.
 about to fork child process, waiting until server is ready for connections.
-forked process: 10714
+forked process: 59978
 child process started successfully, parent exiting
 Cleaning up.
-Dassie database process is running with PID 10714.
+Dassie database process is running with PID 59978.
+Using config file /Users/mhucka/repos/dassie-git/dassie/lcsh-db/dassie.conf.
+Using port 27017.
 ```
 
 You can stop the database using the `stop` command, like this:
