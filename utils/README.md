@@ -19,10 +19,10 @@ Running the scripts
 
 The process is basically this:
 
-1. Unzip the copy of `authoritiessubjects.nt.skos.gz` in the directory `../data`, or (if you are trying to use a new edition of the LCSH subject headings RDF file) download a copy from http://id.loc.gov/download/.
-2. If there is no `authoritiessubjects.nt.skos` in the current directory, create a symbolic link to the file in `../data`:
+1. Unzip the copy of `authoritiessubjects.nt.skos.gz` in the directory [../dassie/data](../dassie/data), or (if you are trying to use a new edition of the LCSH subject headings RDF file) download a copy from http://id.loc.gov/download/.
+2. If there is no `authoritiessubjects.nt.skos` in the current directory, create a symbolic link to the file in [../dassie/data](../dassie/data):
    ```
-   ln -s ../data/authoritiessubjects.nt.skos
+   ln -s ../dassie/data/authoritiessubjects.nt.skos
    ```
 3. Start MongoDB's `mongod` server process:
    ```
@@ -48,5 +48,5 @@ The process is basically this:
    ```
    where `PID` is the process id of the `mongod` process as reported by `start-empty-mongodb`.
 
-If all went well, there will be a database directory named `lcsh-db` in the current directory.  This can be used to replace the `lcsh-db` directory in the parent Dassie directory.  It can also be saved as a database dump, and used to replace the file `lcsh-dump.tgz` in `../data`.
+If all went well, there will be a database directory named `lcsh-db` in the current directory.  This can be used to replace the `lcsh-db` directory in the Dassie directory [../dassie/lcsh-db](../dassie/lcsh-db).  It can also be saved as a database dump, and used to replace the file `lcsh-dump.tgz` in [../dassie/data](../dassie/data).
 
