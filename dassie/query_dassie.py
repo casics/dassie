@@ -36,7 +36,7 @@ _CONN_TIMEOUT = 5000
 _DEFAULT_HOST = 'localhost'
 '''Default network host for Dassie server if no explicit host is given.'''
 
-_DEFAULT_PORT = 27017
+_DEFAULT_PORT = 27890
 '''Default network port for MongoDB if no explicit port number is given.'''
 
 _DB_NAME = 'lcsh-db'
@@ -115,8 +115,9 @@ Congress Subject Headings (LCSH).
         raise SystemExit(colorcode('Can only perform one action at a time.', 'error'))
     if not user or not pswd or not host or not port:
         (user, pswd, host, port) = obtain_credentials(_KEYRING, "Dassie database",
-                                                      user, pswd, host=_DEFAULT_HOST,
-                                                      port=_DEFAULT_PORT)
+                                                      user, pswd, host, port,
+                                                      default_host=_DEFAULT_HOST,
+                                                      default_port=_DEFAULT_PORT)
     if keyring:
         # Save the credentials if they're different from what's currently saved.
         (s_user, s_pswd, s_host, s_port) = get_credentials(_KEYRING)
