@@ -1,10 +1,10 @@
 # -*- mode: sh-mode; -*-
 # =============================================================================
 # @file    .gitignore
-# @brief   .gitignore file for LoCTerms
+# @brief   .gitignore file for Dassie
 # @author  Michael Hucka <mhucka@caltech.edu>
 # @license Please see the file named LICENSE in the project directory
-# @website https://github.com/casics/locterms
+# @website https://github.com/casics/dassie
 # =============================================================================
 
 # Compiled source
@@ -76,5 +76,5 @@ lcsh-db
 mongod.log
 mongod.log.*
 mongod.pid
-locterms.conf
-locterms.log.old
+dassie.conf
+dassie.log.old
