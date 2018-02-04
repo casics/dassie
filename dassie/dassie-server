@@ -21,7 +21,7 @@ dump_file="data/lcsh-dump.tgz"
 dbname="lcsh-db"
 log_file="dassie.log"
 conf_file="dassie.conf"
-port=27017
+port=27890
 username=
 password=
 
@@ -257,14 +257,14 @@ cleanup_database_dump() {
 }
 
 restore_mongo_database() {
-    $dry_run || mongorestore -v --db $dbname dump/lcsh
+    $dry_run || mongorestore -v --host localhost:$port --db $dbname dump/lcsh
 }
 
 config_mongod_user() {
     if ! $dry_run; then
         # Using --quiet to mongod doesn't stop echoing commands, so
         # need to use output rediction.
-        mongo admin <<EOF > /dev/null
+        mongo --host localhost --port $port admin <<EOF > /dev/null
 db.createUser( { user: "$username", pwd: "$password", roles: [ { role: "read", db: "lcsh-db" } ] } );
 EOF
         if (($? > 0)); then
