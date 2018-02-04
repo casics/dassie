@@ -5,7 +5,7 @@ Dassie implements a database of the subject term hierarchies found in the [Libra
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python](https://img.shields.io/badge/Python-3.4+-brightgreen.svg)](http://shields.io)
-[![Latest version](https://img.shields.io/badge/Latest_version-1.0.0-green.svg)](http://shields.io)
+[![Latest version](https://img.shields.io/badge/Latest_version-1.0.1-green.svg)](http://shields.io)
 
 *Authors*:      [Michael Hucka](http://github.com/mhucka) and [Matthew J. Graham](https://github.com/doccosmos)<br>
 *Repository*:   [https://github.com/casics/dassie](https://github.com/casics/dassie)<br>
