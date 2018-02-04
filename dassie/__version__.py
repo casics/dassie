@@ -6,7 +6,7 @@
 # @website https://github.com/casics/dassie
 # =============================================================================
 
-__version__     = '1.0.0'
+__version__     = '1.0.1'
 __title__       = 'Dassie'
 __description__ = 'Database of LCSH subject terms and hierarchies'
 __url__         = 'https://github.com/casics/dassie'
