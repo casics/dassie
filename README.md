@@ -14,6 +14,7 @@ Dassie implements a database of the subject term hierarchies found in the [Libra
 Table of Contents
 -----------------
 
+  * [Recent news and activities](#-recent-news-and-activities)
   * [Introduction](#-introduction)
   * [Installing and configuring Dassie](#-installing-and-configuring-dassie)
      * [Download Dassie](#-download-dassie)
@@ -25,6 +26,11 @@ Table of Contents
   * [Getting help and support](#-getting-help-and-support)
   * [Contributing: info for developers](#-contributing-info-for-developers)
   * [Acknowledgments](#️-acknowledgments)
+
+🏁 Recent news and activities
+------------------------------
+
+Please see the file [NEWS.md](NEWS.md) for a summary of the changes in the most recent release.
 
 ☀ Introduction
 -----------------------------
