@@ -1,6 +1,11 @@
 NEWS &ndash; history of changes to Dassie
 =========================================
 
+Version 1.0.2
+-------------
+
+* Added draft JOSS paper in new subdirectory [docs](docs)
+
 Version 1.0.1
 -------------
 
