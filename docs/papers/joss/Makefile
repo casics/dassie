@@ -10,23 +10,23 @@
 # Change the following values to match your configuration.
 # .............................................................................
 
-input	= paper.md
-output	= paper.pdf
-bib	= paper.bib
+input	:= paper.md
+output	:= paper.pdf
+bib	:= paper.bib
 
 
 # Main code -- no more customization variables after this point
 # .............................................................................
 
-title	= $(grep title: paper.md | sed 's/title: *//' | tr -d "'")
-author	= $(sed -n '/authors:/,/affiliations:/p' | grep name: | sed 's/- name: *//' | awk '{print}' ORS=', ')
-repo	= "$(git remote get-url origin | sed 's|git@github.com:|https://github.com/|')"
+title	:= $(shell grep title: $(input) | sed 's/title: *//' | tr -d "'")
+authors := $(shell sed -n '/authors:/,/affiliations:/p' $(input) | grep name: | sed 's/- name: *//' | paste -d, -s - | sed 's/,/, /g')
+repo	:= $(shell git remote get-url origin | sed 's|git@github.com:|https://github.com/|' | sed 's/\.git//')
 
 $(output): $(input) $(bib) Makefile
 	pandoc \
-	-V paper_title=$(title) \
-	-V citation_author=$(author) \
-	-V repository=$(repo) \
+	-V paper_title="$(title)" \
+	-V citation_author="$(authors)" \
+	-V repository="$(repo)" \
 	-V archive_doi="http://dx.doi.org/00.00000/zenodo.0000000" \
 	-V formatted_doi="00.00000/joss.00000" \
 	-V paper_url="http://joss.theoj.org/papers/" \
