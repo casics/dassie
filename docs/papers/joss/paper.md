@@ -73,4 +73,8 @@ Most of the fields in a Dassie entry are taken directly from the LCSH database, 
 
 To mitigate security risks that would arise from having unrestricted network access to the database, Dassie requires the use of a user name and password.  These are set at the time of first creating installing and configuring Dassie database using the `dassie-server` control/configuration program.  For its part, the `dassie` command-line utility uses the operating system's keyring/keychain functionality to get the user name and password needed to access the database over the network, so that you do not have to type them every time.  If no such credentials are found, it will query the user interactively for the user name and password, and then store them in the keyring/keychain so that it does not have to ask again in the future.
 
+# Acknowledgments
+
+This material is based upon work supported by the [National Science Foundation](https://nsf.gov) under Grant Number 1533792.  Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.
+
 # References
