@@ -342,7 +342,7 @@ Everyone is asked to read and respect the [code of conduct](CONDUCT.md) when par
 ❤️ Acknowledgments
 ------------------
 
-Funding for this and other CASICS work has come from the [National Science Foundation](https://nsf.gov) via grant NSF EAGER #1533792 (Principal Investigator: Michael Hucka).
+This material is based upon work supported by the [National Science Foundation](https://nsf.gov) under Grant Number 1533792 (Principal Investigator: Michael Hucka).  Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.
 
 The photo of a dassie (a type of rock hyrax) at the top of this page came from [Wikipedia](https://commons.wikimedia.org/wiki/File:Procavia-capensis-Frontal.JPG). The author is Bjørn Christian Tørrissen, who made it available under the terms of the Creative Commons Attribution-Share Alike 3.0 Unported license.
     
